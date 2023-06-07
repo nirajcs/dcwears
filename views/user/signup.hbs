@@ -1,0 +1,62 @@
+{{>main-header}}
+<div class="main-div">
+    <div class="login-parent ps-2 rounded" style="width: 30rem;">
+        <div class="login-form p-3">
+            <h3 class="text-center mb-2">Sign Up</h3>
+            <form action="/register" method="post">
+                <div class="mb-2">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control form-control-sm" id="name" name="name" required>
+                </div>
+                <div class="mb-2">
+                    <label for="email" class="form-label">Email address</label>
+                    <input type="email" class="form-control form-control-sm" id="email" name="email" required>
+                </div>
+                <div class="mb-2">
+                    <label for="mobile" class="form-label">Mobile</label>
+                    <input type="tel" class="form-control form-control-sm" id="mobile" name="mobile" required>
+                </div>
+                <div class="mb-2">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control form-control-sm" id="password" name="password" onkeyup="checkPasswordStrength()" required>
+                </div>
+                <div class="mb-2">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control form-control-sm" id="confirm_password" name="confirm_password" required>
+                </div>
+                <span id="password-strength"></span>
+                <p class="text-danger">{{message}}</p>
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary btn-sm">Sign in</button>
+                </div>
+            </form>
+            <div class="d-flex justify-content-center">
+                <p class="pt-2">Already User? <a href="/login">Log in</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function checkPasswordStrength() {
+      var password = document.getElementById("password").value;
+      var passwordStrength = document.getElementById("password-strength");
+
+      // Perform password strength validation here
+      // You can use regular expressions or any other validation logic
+
+      // Update the password strength indicator accordingly
+      if (password.length < 6) {
+        passwordStrength.textContent = "Weak Password";
+        passwordStrength.style.color = "red";
+      } else if (password.length < 10) {
+        passwordStrength.textContent = "Medium Strength";
+        passwordStrength.style.color = "orange";
+      } else {
+        passwordStrength.textContent = "Strong Password";
+        passwordStrength.style.color = "green";
+      }
+    }
+  </script>
+
+{{>user-footer}}

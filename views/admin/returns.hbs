@@ -1,0 +1,48 @@
+{{>admin-header}}
+<div class="m-3 mt-4 pt-5 px-4">
+<h3 class="my-2">Returned Orders</h3>
+  <div class="mt-2">
+    <table class="table mt-2" id="productsTable">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">User</th>
+            <th scope="col">Mobile</th>
+            <th scope="col">Email</th>
+            <th scope="col">Address</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Reason</th>
+            <th scope="col">Products</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each returnDetails}}
+            <tr>
+                <td scope="col">{{inc @index}}</td>
+                <td scope="col">{{this.user}}</td>
+                <td scope="col">{{this.mobile}}</td>
+                <td scope="col">{{this.email}}</td>
+                <td scope="col">{{this.address}}</td>
+                <td scope="col">{{this.total}}</td>
+                <td scope="col">{{this.return.reason}}</td>
+                <td scope="col"><a href="/admin/returninfo/{{this._id}}">View</a></td>
+            </tr>
+        {{/each}}
+    </tbody>
+    </table>
+  </div>
+</div>
+
+
+<script>
+  $(function () {
+    $('#productsTable').DataTable({
+      order: [[1, 'asc']], // Sort by the second column by default
+    rowCallback: function(row, data, index) {
+      var api = this.api();
+      var rowNum = api.page.info().start + index + 1;
+      $(row).find('td:eq(0)').text(rowNum); // Assign the row number to the first column
+    }
+    });
+  });
+</script>

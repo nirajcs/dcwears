@@ -1,0 +1,64 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary navbar-dark p-0 fixed-top" id="userheader">
+    <div class="container-fluid bg-dark p-2">
+      <i class="fa-solid fa-arrow-left mx-2" style="color: #ffffff; cursor: pointer;" onclick="history.back()"></i>
+      <a class="navbar-brand mx-2 text-white" href="/admin">Admin</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="navbar">
+          {{!-- <a href="/admin/category" class="btn btn-secondary mb-3">Categories</a> --}}
+          <li class="nav-item mx-2" id="home">
+            <a href="/admin" class="text-white text-decoration-none">Home</a>
+          </li>
+          <li class="nav-item mx-2" id="category">
+            <a href="/admin/category" class="text-white text-decoration-none">Category</a>
+          </li>
+          <li class="nav-item mx-2" id="banner">
+            <a href="/admin/addbanners" class="text-white text-decoration-none">Banners</a>
+          </li>
+          <li class="nav-item mx-2" id="order">
+            <a href="/admin/orders"  class="text-white text-decoration-none">Orders</a>
+          </li>
+          <li class="nav-item mx-2" id="products">
+            <a href="/admin/adminproduct"  class="text-white text-decoration-none">Products</a>
+          </li>
+          <li class="nav-item mx-2" id="users">
+            <a href="/admin/userlist"  class="text-white text-decoration-none">Users</a>
+          </li>
+        </ul>
+        <a href="/admin/logout"><button type="button" class="btn btn-primary mx-2">Logout</button></a>
+      </div>
+    </div>
+</nav>
+
+
+<script>
+  // Get the active item from local storage
+  var activeItem = localStorage.getItem('activeItem');
+
+  // Add the active class to the stored active item, if it exists
+  if (activeItem) {
+    var navItem = document.getElementById(activeItem);
+    if (navItem) {
+      navItem.classList.add('active');
+    }
+  }
+
+  // Attach click event listeners to each list item
+  var navItems = document.querySelectorAll('#navbar li');
+  navItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      // Remove the active class from all list items
+      navItems.forEach(function(navItem) {
+        navItem.classList.remove('active');
+      });
+
+      // Add the active class to the clicked list item
+      this.classList.add('active');
+
+      // Store the active item in local storage
+      localStorage.setItem('activeItem', this.id);
+    });
+  });
+</script>

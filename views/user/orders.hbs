@@ -1,0 +1,153 @@
+{{>user-header}}
+<section class="h-100 gradient-custom">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-lg-10 col-xl-8">
+        {{#each orderDetails}}
+        <div class="card my-3 border border-1" style="border-radius: 10px;">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h6 class="text-muted mb-0">Order Date : {{this.date}}</h6>
+              <p class="small text-muted mb-0">Order ID : {{this.id}}</p>
+            </div>
+            {{#each this.products}}
+            <div class="card shadow-0 border mb-4">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-2">
+                    <img src="/images/products/{{this.image}}"
+                      class="img-fluid" alt="Phone">
+                  </div>
+                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                    <p class="text-muted mb-0">{{this.name}}</p>
+                  </div>
+                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                    <p class="text-muted mb-0 small">White</p>
+                  </div>
+                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                    <p class="text-muted mb-0 small">Size: {{this.size}}</p>
+                  </div>
+                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                    <p class="text-muted mb-0 small">Qty: {{this.quantity}}</p>
+                  </div>
+                  <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
+                    <p class="text-muted mb-0 small">₹{{this.price}}</p>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+            {{/each}}
+            <div class="d-flex justify-content-between pt-2 align-items-center">
+                <div>
+                    <p class="fw-bold mb-0">Order Details</p>
+                    <p class="text-muted mb-0 pt-2">Order Status : {{this.status}}</p>
+                    <p class="text-muted mb-0 pt-2">Payment Method : {{this.payment}}</p>
+                </div>
+                <h4 class="text-muted mb-0"><span class="fw-bold">Total: </span>₹{{this.total}}</h4>
+            </div>
+
+          </div>
+          <div class="card-footer border-0 py-4"
+            style="background-color: #221e1e; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+            {{#if (eq this.status "Cancelled")}}
+                <div class="d-flex">
+                    <h6 class="text-danger"><b>This order has been Cancelled</b></h6>
+                </div>
+            {{else if (eq this.status "Delivered")}}
+                {{#if this.return}}
+                    <div class="d-flex align-items-start">
+                        <h6 class="text-warning"><b>This order has been Returned</b></h6>
+                    </div>
+                {{else}}
+                    <div class="d-flex align-items-start">
+                        <a class="btn btn-warning return-button" data-bs-orderid="{{this.id}}"  data-bs-toggle="modal" data-bs-target="#returnProduct">Return Order</a>
+                    </div>
+                    {{#if returnErr}}
+                    <div class="mt-2">
+                        <p class="text-danger">{{returnErr}}</p>
+                    </div>
+                    {{else}}
+                    <div class="mt-2">
+                        <p class="text-light">You can only return before 7 days from the date of Delivery.</p>
+                    </div>
+                    {{/if}}
+                {{/if}}
+            {{else}}
+                <div class="d-flex align-items-start">
+                    <a class="btn btn-danger" onclick="cancelOrder('{{this.id}}')">Cancel Order</a>
+                </div>
+            {{/if}}
+          </div>
+        </div>
+        <hr>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{{!-- RETURN MODAL --}}
+
+<!-- Modal -->
+<div class="modal fade" id="returnProduct" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Reason for returning</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/return-order" method="post">
+            <input type="hidden" name="orderid" id="idField">
+            <label for="reason">Your Reason:</label>
+            <input type="text" class="form-control my-2" id="reason" name="reason" placeholder="Enter your reason here">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Return</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+{{!-- RETURN MODAL --}}
+
+<script>
+  function cancelOrder(orderId) {
+      Swal.fire({
+          title: 'Are you sure to cancel this order?',
+          text: "We apologize if something happened wrong",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Cancel Order!',
+          cancelButtonText: 'No, keep my order'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire(
+                  'Cancelled!',
+                  'Order has been cancelled.',
+                  'success'
+              ).then(() => {
+                  window.location.href = '/cancelorder/' + orderId;
+              });
+          }
+      });
+  }
+</script>
+
+<script>
+    var buttonFields = document.querySelectorAll('.return-button')
+    buttonFields.forEach((button)=>{
+        button.addEventListener('click',()=>{
+            var orderid = button.getAttribute('data-bs-orderid')
+            var modalField = document.getElementById('idField')
+            modalField.value = orderid
+        })
+    })
+</script>

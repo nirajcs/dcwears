@@ -1,0 +1,159 @@
+{{>user-header}}
+<section class="pt-4" style="background-color: #eee;">
+  <div class="container py-5">
+    <div class="row">
+      <div class="col">
+        <nav aria-label="breadcrumb" class="bg-light rounded-3 p-3 mb-4 d-flex justify-content-between">
+          <h4>USER PROFILE</h5>
+          <a class="btn btn-success" data-bs-toggle="modal" data-bs-target="#profileEdit">Edit Profile</a>
+        </nav>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-sm-6">
+                <p class="mb-0" style="text-align: right;"><b>Name</b></p>
+              </div>
+              <div class="col-sm-6">
+                <p class="text-muted mb-0">{{user.name}}</p>
+              </div>
+            </div>
+            <hr>
+            <div class="row">
+              <div class="col-sm-6">
+                <p class="mb-0" style="text-align: right;"><b>Email</b></p>
+              </div>
+              <div class="col-sm-6">
+                <p class="text-muted mb-0">{{user.email}}</p>
+              </div>
+            </div>
+            <hr>
+            <div class="row">
+              <div class="col-sm-6">
+                <p class="mb-0" style="text-align: right;"><b>Phone</b></p>
+              </div>
+              <div class="col-sm-6">
+                <p class="text-muted mb-0">{{user.mobile}}</p>
+              </div>
+            </div>
+            <hr>
+            <div class="row px-3">
+              <p class="text-center"><u><b>Address</b></u></p>
+              {{#each user.address}}
+                <div class="col-sm-4 my-2">
+                  <div class="card" style="width: 18rem;">
+                      <div class="card-body">
+                          <div class="d-flex justify-content-between">
+                              <h5 class="card-title">{{this.address_type}}</h5>
+                              <a onclick="deleteAddress('{{this._id}}')" style="cursor: pointer;"><i class="fa-solid fa-trash" style="color: #f60404;"></i></a>
+                          </div>
+                          <p class="card-text">{{this.address}}</p>
+                      </div>
+                  </div>
+                </div>
+              {{/each}}
+                <a class="btn btn-secondary mt-3" data-bs-toggle="modal" data-bs-target="#addAddress">Add Address</a>
+            </div>
+            <hr>
+          </div>
+        </div>
+        <div class="row">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Address Modal -->
+<div class="modal fade" id="addAddress" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Add Address</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/profile_address_add" method="post">
+            <div class="AddressTypeInput my-2">
+                <label for="type" class="my-2">Type</label><br>
+                <input class="form-control" type="text" name="type" id="type" required>
+            </div>
+            <div class="AddressInput my-2">
+                <label for="address" class="my-2">Address</label><br>
+                <textarea class="form-control" name="address" id="form7Example7" rows="4" required></textarea>
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <input type="submit" class="btn btn-primary" value="Add">
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="profileEdit" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Edit Profile</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/profile_edit" method="post">
+            <div class="AddressTypeInput my-2">
+                <label for="type" class="my-2">Name</label><br>
+                <input class="form-control" type="text" name="name" value="{{user.name}}" placeholder="Enter your name" required>
+            </div>
+            <div class="AddressTypeInput my-2">
+                <label for="type" class="my-2">Email</label><br>
+                <input class="form-control" type="email" name="email" value="{{user.email}}" required>
+            </div>
+            <div class="AddressTypeInput my-2">
+                <label for="type" class="my-2">Mobile</label><br>
+                <input class="form-control" type="tel" pattern="[0-9]{10}" name="mobile" placeholder="Enter Correct Mobile Number" value="{{user.mobile}}" required>
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <input type="submit" class="btn btn-primary" value="Save Changes">
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function deleteAddress(Id) {
+      Swal.fire({
+          title: 'Are you sure to remove this Address?',
+          text: "You can't retrieve data later",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Delete!'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire(
+                  'Deleted!',
+                  'Address has been deleted.',
+                  'success'
+              ).then(() => {
+                  window.location.href = '/delete-address?id=' + Id;
+              });
+          }
+      });
+  }
+</script>

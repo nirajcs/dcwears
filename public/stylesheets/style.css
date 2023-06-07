@@ -1,0 +1,139 @@
+body {
+  margin: 0;
+  padding: 0;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00b7ff;
+}
+
+.active{
+  /* background-color: #da0606; */
+  font-weight: 900;
+}
+
+.main-div {
+  height: 100vh;
+  background-color: rgb(202, 202, 199);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-parent {
+  background-color: white;
+  width: fit-content;
+  /* height: fit-content; */
+}
+.login-img {
+  width: 15rem;
+  height: 23rem;
+}
+
+/*HOME PAGE TEMPLATE START*/
+.carousel-item {
+  height: 50vh;
+}
+.card {
+box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+.footer-cta {
+box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px;
+}
+.price {
+color: #263238;
+font-size: 24px;
+}
+
+.card-title {
+color:#263238
+}
+
+.sale {
+color: #E53935
+}
+
+.sale-badge {
+background-color: #E53935
+}
+/*HOME PAGE TEMPLATE END*/
+
+
+
+/*PRODUCT VIEW TEMPLATE START*/
+.card {
+  border: none;
+}
+.product {
+  background-color: #eee;
+}
+.brand {
+  font-size: 13px;
+}
+.act-price {
+  color: red;
+  font-weight: 700;
+}
+.dis-price {
+  text-decoration: line-through;
+}
+.about {
+  font-size: 14px;
+}
+.color {
+  margin-bottom: 10px;
+}
+label.radio {
+  cursor: pointer;
+}
+label.radio input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+label.radio span {
+  padding: 2px 9px;
+  border: 2px solid #ff0000;
+  display: inline-block;
+  color: #ff0000;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+label.radio input:checked + span {
+  border-color: #ff0000;
+  background-color: #ff0000;
+  color: #fff;
+}
+.btn-danger {
+  background-color: #ff0000 !important;
+  border-color: #ff0000 !important;
+}
+.btn-danger:hover {
+  background-color: #da0606 !important;
+  border-color: #da0606 !important;
+}
+.btn-danger:focus {
+  box-shadow: none;
+}
+.cart i {
+  margin-right: 10px;
+}
+/*PRODUCT VIEW TEMPLATE END*/
+
+
+/* PRELOADER START */
+#preloader{
+  background:#000 url('/images/resources/preloader.gif') no-repeat center center;
+  height: 100vh;
+  width: 100%;
+  position: fixed;
+  z-index: 100;
+}
+/* PRELOADER END*/
+
+
+#userheader{
+  z-index: 10;
+}

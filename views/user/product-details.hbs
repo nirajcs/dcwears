@@ -1,0 +1,135 @@
+{{>user-header}}
+<div class="container-fluid pt-3 mt-5">
+  <div class="row d-flex justify-content-center">
+    <div class="col">
+      <div class="card mt-4 my-4">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="images pt-5">
+
+              <div class="text-center">
+                <img
+                  id="main_product_image"
+                  src="/images/products/{{initialImage}}"
+                  width="250"
+                  class="product-image"
+                  data-zoom-src="/images/products/{{this}}"
+                />
+              </div>
+
+              <div class="thumbnail text-center my-2">
+                {{!-- {{#each productDetails}} --}}
+                {{#each productDetails.image}}
+                <img
+                  onclick="change_image(this)"
+                  src="images/products/{{this}}"
+                  width="70"
+                />
+                {{/each}}
+                {{!-- {{/each}} --}}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="product p-5">
+              <div class="d-flex justify-content-between align-items-center">
+              </div>
+              <div class="mt-4 mb-3">
+                <span class="text-uppercase text-muted brand mb-0">DC WEARS</span>
+                {{!-- {{#each productDetails}} --}}
+                <h3 class="text-uppercase">{{productDetails.name}}</h3>
+                <div class="price d-flex flex-row align-items-center mb-3">
+                  {{!-- {{#if this.price}} --}}
+                    <h6 class="act-price text-black"><i>₹{{productDetails.price}}</i></h6>
+                  {{!-- {{/if}} --}}
+                </div>
+                <p class="about">{{productDetails.description}}</p>
+                {{!-- {{/each}} --}}
+              </div>
+              <div class="sizes mt-5">
+                <h6 class="text-uppercase">Size</h6>
+                <form action="/addtocart" method="post">
+                  <label class="radio">
+                    <input type="radio" name="size" value="S" checked/>
+                    <span>S</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="size" value="M" />
+                    <span>M</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="size" value="L" />
+                    <span>L</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="size" value="XL" />
+                    <span>XL</span>
+                  </label>
+                  <label class="radio">
+                    <input type="radio" name="size" value="XXL" />
+                    <span>XXL</span>
+                  </label>
+                  <input type="hidden" value="{{productDetails._id}}" name="prodId">
+                  <input type="hidden" name="price" id="price" value="{{productDetails.price}}">
+                  <div class="cart mt-4 align-items-center">
+                    <input type="submit" id="addcart" class="btn btn-danger text-uppercase mr-2 px-4" value="Add to Cart">
+                    {{!-- <a href="/addtocart?proId={{productDetails._id}}"><button class="btn btn-danger text-uppercase mr-2 px-4">Add to cart</button></a> --}}
+                    <i class="fa fa-heart text-muted"></i>
+                    <i class="fa fa-share-alt text-muted"></i>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{>user-footer}}
+
+<script>
+
+        $(document).ready(function () {
+            $('.product-image').each(function () {
+                $(this).elevateZoom({
+                    zoomWindowPosition: 5,
+                    zoomWindowWidth: 300,
+                    zoomWindowHeight: 300,
+                    gallery: 'product-image-container',
+                    cursor: 'crosshair',
+                    galleryActiveClass: 'active',
+                    responsive: true,
+                    zoomWindowFadeIn: 500,
+                    zoomWindowFadeOut: 500,
+                    lensFadeIn: 500,
+                    lensFadeOut: 500,
+                    zoomWindowContainerClass: 'zoom-display'
+                });
+            });
+        });
+
+  function change_image(image){ var container =
+  document.getElementById("main_product_image"); container.src = image.src; }
+  document.addEventListener("DOMContentLoaded", function(event) { });
+
+//SWEET ALERT
+    document.getElementById('addcart').addEventListener('click',()=>{
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Product added to the cart',
+            showConfirmButton: false,
+            timer: 3000 // Time in milliseconds (3 seconds)
+        });
+        
+        // Close the alert box after 3 seconds
+        setTimeout(function(){
+            Swal.close();
+        }, 3000);
+    })   
+
+
+</script>
+

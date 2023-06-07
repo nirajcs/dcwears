@@ -1,0 +1,173 @@
+{{>user-header}}
+<section class="h-100 mt-5 pt-2" style="background-color: #eee;">
+  <div class="container h-100 py-5">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-10">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-normal mb-0 text-black">Shopping Cart</h3>
+        <div>
+        </div>
+        </div>
+          {{!-- <div class=" mb-4">
+          <div class=" p-4">
+            <div class="form-outline text-center">
+              <h5 class="text-muted">{{message}}</h5>
+            </div>
+          </div>
+        </div> --}}
+
+        
+
+        {{#each cartData}}
+          <div class="cardDataClass card rounded-3 mb-4">
+            <div hidden>
+              <div class="prod_id_class">{{this.prod_id}}</div>
+              <div class="size_class">{{this.size}}</div>
+            </div>
+            <div class="card-body p-4">
+              <div class="row d-flex justify-content-between align-items-center">
+                <div class="col-md-2 col-lg-2 col-xl-2">
+                  <img
+                    src="/images/products/{{this.image.[2]}}"
+                    class="img-fluid rounded-3" alt="Cotton T-shirt">
+                </div>
+                <div class="col-md-3 col-lg-3 col-xl-3">
+                  <p class="lead fw-normal mb-2">{{this.name}}</p>
+                  <p><span class="text-muted">Size: </span>{{this.size}}</p>
+                </div>
+                <div class="col-md-3 col-lg-3 col-xl-2 d-flex">
+                  <button class="btn btn-link px-2"
+                    onclick="this.parentNode.querySelector('input[type=number]').stepDown();this.parentNode.querySelector('.quantityInput').dispatchEvent(new CustomEvent('change'));">
+                    <i class="fas fa-minus"></i>
+                  </button>
+
+                  <input id="form1" class="quantity_class quantityInput form-control form-control-sm" min="1" name="quantity" value="{{this.quantity}}" type="number"/>
+
+                  <button class="btn btn-link px-2"
+                    onclick="this.parentNode.querySelector('input[type=number]').stepUp();this.parentNode.querySelector('.quantityInput').dispatchEvent(new CustomEvent('change'));">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+                <input type="hidden" name="originalPrice" class="originalPriceClass" id="originalPrice" value="{{this.price}}">
+                <div class="col-md-3 col-lg-2 col-xl-2 offset-lg-1">
+                  <h5 class="totalPriceClass mb-0" id="totalPrice" >{{this.price}}</h5>
+                </div>
+                <div class="col-md-1 col-lg-1 col-xl-1 text-end">
+                  <a class="text-danger" onclick="deleteItem('{{this.prod_id}}','{{this.size}}')"><i class="fas fa-trash fa-lg"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+
+        <div class="card mb-4">
+          <div class="card-body p-4 d-flex flex-row">
+            <div class="form-outline flex-fill">
+              <h3>Total</h3>
+            </div>
+            <div class="totalPrice">
+              <h3 id="finalAmount">{{totalPrice}}</h3>
+            </div>
+          </div>
+        </div>
+        
+
+        <a href="/payment" class="btn btn-primary btn-lg btn-block w-100">Proceed to Pay</a>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{{!-- <script src="/scripts/user/user-cart.js"></script> --}}
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const finalAmount = document.getElementById('finalAmount');
+    const cardDataArray = Array.from(document.getElementsByClassName('cardDataClass'));
+    
+
+    cardDataArray.map(cardData => {
+      const quantityInput = cardData.querySelector('.quantityInput');
+      const originalPrice = cardData.querySelector('.originalPriceClass');
+      const totalPriceEl = cardData.querySelector('.totalPriceClass');
+      
+      quantityInput.addEventListener('change', () => {
+        const totalPrice = quantityInput.value * originalPrice.value;
+        totalPriceEl.innerText = totalPrice.toString();
+        totalPriceEl.dispatchEvent(new CustomEvent('change'));
+        updateCart();
+      })
+
+      totalPriceEl.addEventListener('change', () => {
+        const sum = cardDataArray.reduce((sum, cardData) => {
+          return sum + Number(cardData.querySelector('.totalPriceClass').innerText);
+        }, 0);
+        finalAmount.innerText = sum.toString();
+      });
+
+      totalPriceEl.dispatchEvent(new CustomEvent('change'));
+    });
+
+    async function updateCart() {
+      const products = cardDataArray.map(cardData => {
+        const prod_id = cardData.querySelector('.prod_id_class').innerText;
+        const quantity = Number(cardData.querySelector('.quantity_class').value);
+        const size = cardData.querySelector('.size_class').innerText;
+        return ({
+          prod_id,
+          quantity,
+          size,
+          finalAmount: Number(finalAmount.innerText)
+        })
+      })
+      const updatedCartData = { products };
+      try {
+        const response = await fetch('/cart/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedCartData),
+        });
+
+        const resBody = await response.json();
+        console.info(resBody);
+      } catch(err) {
+        console.err(err);
+      }
+    }
+
+});
+
+</script>
+
+
+<script>
+  function deleteItem(Id,size) {
+      Swal.fire({
+          title: 'Are you sure to remove this Item?',
+          text: "You can't buy unless added to cart",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Remove!'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire(
+                  'Removed!',
+                  'Item has been Removed.',
+                  'success'
+              ).then(() => {
+                  window.location.href = '/cart/delete/' + Id +'/' +size;
+              });
+          }
+      });
+  }
+</script>
+
+

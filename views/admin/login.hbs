@@ -1,0 +1,30 @@
+{{>main-header}}
+<div class="main-div">
+    <div class="d-flex login-parent ps-2 rounded row">
+        <div class="login-form p-4 mt-3 col-8">
+            <form action="/admin" method="post">
+                <h3 class="text-center">Admin Login</h3>
+                <div class="my-2">
+                    <label for="adminKeyInput" class="form-label">Admin Key</label>
+                    <input type="email" class="form-control" id="adminKeyInput" name="adminKey" required>
+                </div>
+                <div class="my-2">
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1" name="password" required>
+                </div>
+                <div class="my-2">
+                    <a href="/admin/forget">Forget Password?</a>
+                </div>
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-primary my-2">Log in</button>
+                    <p class="text-danger ps-2 mt-3">{{message}}</p>
+                </div>
+            </form>
+        </div>
+        <div class="col-4">
+            <img src="/images/resources/JL.png" alt="logo" class="login-img rounded-end">
+        </div>
+    </div>
+</div>
+
+{{>user-footer}}

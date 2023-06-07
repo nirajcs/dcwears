@@ -1,0 +1,88 @@
+{{>admin-header}}
+
+<div class="container mt-5 pt-3">
+    <table class="table text-center">
+    <thead>
+        <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Image</th>
+        <th scope="col">Activate</th>
+        <th scope="col">Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each bannerData}}
+        <tr>
+            <th scope="row">{{inc @index}}</th>
+            <td>{{this.name}}</td>
+            <td><img src="/images/banners/{{this.image}}" style="height: 70px; width: 200px;" alt="image"></td>
+            {{#if this.activate}}
+            <div>
+                <td class="text-success"><b>Activated</b></td>
+            </div>
+            {{else}}
+                <td><a href="/admin/activatebanner/{{this._id}}" class="btn btn-success">Activate</a></td>
+            {{/if}}
+            <td><a class="btn btn-danger" onclick="deleteBanner('{{this._id}}')">Remove</a></td>
+        </tr>
+        {{/each}}
+    </tbody>
+    </table>
+
+    <a href="" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#exampleModal">Add</a>
+
+</div>
+
+{{!-- MODAL START --}}
+<!-- Button trigger modal -->
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/admin/addbanners" method="post" enctype="multipart/form-data">
+            <label for="heading">Name:</label>
+            <input type="text" name="heading" id="heading" required>
+            <input type="file" name="image" id="image" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Add Banner</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+{{!-- MODAL END --}}
+
+
+<script>
+  function deleteBanner(Id) {
+      Swal.fire({
+          title: 'Are you sure to remove this Banner?',
+          text: "You can't retrieve data later",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Remove!'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire(
+                  'Deleted!',
+                  'Banner has been deleted.',
+                  'success'
+              ).then(() => {
+                  window.location.href = '/admin/removebanner/' + Id;
+              });
+          }
+      });
+  }
+</script>

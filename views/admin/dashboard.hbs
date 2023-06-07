@@ -1,0 +1,131 @@
+{{>admin-header}}
+<div class="container mt-5 pt-3">
+    
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="card border border-dark">
+            <div class="card-body">
+                <h5 class="card-title"><b>Products</b></h5>
+                <p style="font-weight: bold; font-size: large;"><span class="text-muted">Total: </span>{{dashboardDetails.products}}</p>
+                <a href="/admin/adminproduct" class="text-decoration-none">View ></a>
+            </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card border border-dark">
+            <div class="card-body">
+                <h5 class="card-title"><b>Users</b></h5>
+                <p style="font-weight: bold; font-size: large;"><span class="text-muted">Total: </span>{{dashboardDetails.users}}</p>
+                <a href="/admin/userlist" class="text-decoration-none">View ></a>
+            </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card border border-dark">
+            <div class="card-body">
+                <h5 class="card-title"><b>Orders</b></h5>
+                <p style="font-weight: bold; font-size: large;"><span class="text-muted">Total: </span>{{dashboardDetails.orders}}</p>
+                <a href="/admin/orders" class="text-decoration-none">View ></a>
+            </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="my-5 container row d-flex align-items-center">
+        <div class="col-md-8 p-5">
+            <canvas id="myChart"></canvas>
+            {{!-- <img src="/images/resources/salesChart.png" style="width: 100%;" alt="sales-image"> --}}
+        </div>
+        <div class="col-md-4 p-4">
+            <canvas id="statusChart"></canvas>
+            {{!-- <img src="/images/resources/pie-chart.png" style="width: 100%;" alt="pie-chart"> --}}
+        </div>
+    </div>
+</div>
+
+
+{{>user-footer}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Sample chart data
+    const chartData = {
+      labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+      values: [10, 20, 15, 25, 22, 28]
+    };
+
+    // Create the chart
+    const ctx = document.getElementById('myChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.labels,
+        datasets: [{
+          label: 'Sales',
+          data: chartData.values,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+
+    //Pie Chart
+    // Sample chart data
+
+    let statusCount = JSON.parse('{{{statusCount}}}')
+    console.log(statusCount)
+
+    let pieData = {
+      labels: ['Delivered', 'Pending', 'Return'],
+      values: []
+    };
+
+    statusCount.forEach(status => {
+      if (status._id === 'Delivered') {
+        pieData.values[0] = status.count;
+      } else if (status._id === 'Pending') {
+        pieData.values[1] = status.count;
+      }
+
+      if (status._id === 'Delivered' && status.returnCount > 0) {
+        pieData.values[2] = status.returnCount;
+      }
+    });
+
+    console.log(pieData.values)
+    const colors = ['rgba(252, 177, 3)', 'rgba(207, 12, 8)', 'rgba(13, 52, 161)'];
+
+    // Create the chart
+    const donut = document.getElementById('statusChart').getContext('2d');
+    new Chart(donut, {
+      type: 'doughnut',
+      data: {
+        labels: pieData.labels,
+        datasets: [{
+          label: 'Data',
+          data: pieData.values,
+          backgroundColor: colors,
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>

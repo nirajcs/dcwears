@@ -1,0 +1,17 @@
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+    // Show the SweetAlert
+    Swal.fire({
+      title: 'Order Confirmed',
+      html: 'Congratulations!!Your order has been placed.<br><br>Order invoice has been downloaded.',
+      icon: 'success',
+      confirmButtonText: 'OK'
+    }).then((result) => {
+      // Check if the OK button was clicked
+      if (result.isConfirmed) {
+        // Redirect to the home page
+        window.location.href = '/orders';
+      }
+    });
+  });
+</script>
