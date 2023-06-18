@@ -1,7 +1,18 @@
 {{>user-header}}
+<!-- Start Banner Area -->
+	<section class="banner-area organic-breadcrumb">
+		<div class="container">
+			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+				<div class="col-first">
+					<h1>CHECKOUT</h1>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- End Banner Area -->
 <div class="container">
     <div class="row">
-    <div class="col-md-8 mt-5 p-4">
+    <div class="col-md-8 p-4">
         <div class="card mb-4">
         <div class="card-header py-3">
             <h5 class="mb-0">Deliver Address</h5>
@@ -32,54 +43,66 @@
             <!-- Address input -->
             <div class="d-flex row">
                 <div class="form-outline mb-4 col-md-8">
-                <label class="form-label" for="form7Example5">Address:</label>
-                <select name="address" id="addressTypeSelect">
-                    {{#each userDetails.address}}
-                    <option value="{{this._id}}">{{this.address_type}}</option>
-                    {{/each}}
-                </select>
-                <textarea class="form-control" name="useraddress" id="addressTextarea" rows="4" required>{{userDetails.address.[0].address}}</textarea>
+                    <div class="d-flex">
+                        <label class="me-2 form-label" for="form7Example5">Address:</label>
+                        <select name="address" id="addressTypeSelect">
+                            {{#each userDetails.address}}
+                            <option value="{{this._id}}">{{this.address_type}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                <textarea class="mt-2 form-control" name="useraddress" id="addressTextarea" rows="4" required>{{userDetails.address.[0].address}}</textarea>
                 </div>
                 <div class="d-flex align-items-center mx-2 col-md-3">
-                    <a class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAddress">Add Address</a>
+                    <a class="btn btn-success text-white" data-bs-toggle="modal" data-bs-target="#addAddress">Add Address</a>
                 </div>
             </div>
-            <input type="hidden" name="total" value="{{totalPrice}}">
+            <input type="hidden" id="sendTotal" name="total" value="{{totalPrice}}">
         
         </div>
         </div>
     </div>
 
-    <div class="col-md-4 mt-5 pt-4">
-        <div class="card mb-4">
-        <div class="card-header py-3">
+    <div class="col-md-4 pt-4">
+        <div class="card mb-2">
+        <div class="card-header py-2">
             <h5 class="mb-0">Summary</h5>
         </div>
         <div class="card-body">
             <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
                 Total
-                <span>₹{{totalPrice}}</span>
+                <span><span style="font-family: none;">₹</span>{{totalPrice}}</span>
             </li>
             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                 Shipping
                 <span>Free</span>
             </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                Coupon
+                <span id="couponDisplay">0</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
                 <div>
                 <strong>Total amount</strong>
-                <strong>
-                    <p class="mb-0">(including GST)</p>
-                </strong>
                 </div>
-                <h4><strong>₹{{totalPrice}}</strong></h4>
+                <h4><strong>₹<span id="totalPrice">{{totalPrice}}</span></strong></h4>
             </li>
             </ul>
-
         </div>
         </div>
-        <div class="card mb-4">
-        <div class="card-header py-3">
+        <div class="card mb-2">
+            <div class="input-group px-2 pt-2">
+                <input type="text" id="couponName" class="form-control" placeholder="Enter Coupon Code" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="couponApply">Apply</button>
+                </div>
+            </div>
+                <p class="px-3 py-1 text-danger" id="couponError"></p>
+                <a class="px-3 pb-1" style="color: rgb(10, 94, 250); cursor: pointer;" data-bs-toggle="modal" data-bs-target="#couponListModal">Coupons</a>
+        </div>
+        <div class="card mb-2">
+        <div class="card-header py-2">
             <h5 class="mb-0">Payment Method</h5>
         </div>
         <div class="card-body">
@@ -92,8 +115,12 @@
                     <label for="netpayment">Net Banking</label>
                     <input type="radio" name="payment" id="netpayment" value="Net Banking" required>
                 </li>
-                
+                <li class="list-group-item d-flex justify-content-between align-items-center border-bottom px-0">
+                    <label for="wallet">DC Wallet (₹ {{userDetails.wallet}})</label>
+                    <input type="radio" name="payment" id="wallet" value="Wallet" required>
+                </li>
             </ul>
+            <p class="text-danger">{{message}}</p>
             <div class="py-2">
                 <input type="submit" id="confirm" class="btn btn-primary btn-sm btn-block" value="Confirm Order">
                 </form>
@@ -102,12 +129,13 @@
         </div>
         </div>
     </div>
+
     </div>
 </div>
 
 
 
-<!-- Modal -->
+<!--Add Address Modal -->
 <div class="modal fade" id="addAddress" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -137,14 +165,97 @@
   </div>
 </div>
 
+<!--Coupon list Modal -->
+<div class="modal fade" id="couponListModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Coupons</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="table mt-2" id="productsTable">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Discount Amount</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Applicable Amount</th>
+                    <th scope="col">Expiry Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each couponDetails}}
+                    <tr>
+                        <td scope="col">{{inc @index}}</td>
+                        <td scope="col">{{this.name}}</td>
+                        <td scope="col">{{this.discount}}</td>
+                        <td scope="col">{{this.description}}</td>
+                        <td scope="col">{{this.applicable}}</td>
+                        <td scope="col">{{formatDate this.dateExpiry}}</td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 {{!-- RAZOR PAY --}}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 {{!-- RAZOR PAY --}}
 
+{{!-- COUPON MANAGEMENT --}}
+<script>
+    let coupons = JSON.parse(decodeURIComponent('{{{coupons}}}'));
+    let totalAmount = document.getElementById('totalPrice')
+    let sendTotal = document.getElementById('sendTotal')
+    let couponApplyButton = document.getElementById('couponApply')
+    let couponDisplay = document.getElementById('couponDisplay')
+    couponApplyButton.addEventListener('click',()=>{
+        let couponName = document.getElementById('couponName').value
+        if(couponName==''){
+            document.getElementById('couponError').innerText = "Enter Coupon Code"
+            return
+        }
+        console.log(couponName)
+        console.log(coupons)
+        let getCoupon = coupons.find(item=>item.name == couponName)
+        let ExpiryDate = new Date(getCoupon.dateExpiry)
+        let presentDate = new Date()
+        if(Number(getCoupon.applicable) > Number(totalAmount.innerText)){
+            document.getElementById('couponError').innerText = "Unapplicable Coupon"
+        }else{
+            if(ExpiryDate > presentDate){
+                let total = Number(totalAmount.innerText)
+                console.log("YES")
+                total-=Number(getCoupon.discount)
+                totalAmount.innerText=total
+                sendTotal.value=total
+                couponDisplay.innerText = '-'+getCoupon.discount
+                document.getElementById('couponError').innerText =""
+                couponApplyButton.disabled = true;
+            }else{
+                document.getElementById('couponError').innerText = "Coupon Expired"
+            }
+        }
+    })
+</script>
+{{!-- COUPON MANAGEMENT --}}
+
+
 <script>
 
-    console.log(('{{{userAddress}}}'))
-    console.log(decodeURIComponent('{{{userAddress}}}'))
+    //console.log(('{{{userAddress}}}'))
+    //console.log(decodeURIComponent('{{{userAddress}}}'))
 
     // Address Change Start
     const userAddress = JSON.parse(decodeURIComponent('{{{userAddress}}}'));
@@ -227,20 +338,62 @@ $(document).ready(function(){
                 }
             });
         } else {
+            console.log("Else")
             // Redirect to a separate route for non-Net Banking payments
-            var form = $(this);
-            var url = form.attr('action');
-            var method = form.attr('method');
-            $('<input>').attr({
-                type: 'hidden',
-                name: 'paymentMethod',
-                value: paymentMethod
-            }).appendTo(form);
-            form.attr('action', '/confirm_order');
-            form.attr('method', 'POST');
-            form.unbind('submit').submit();
-            form.attr('action', url);
-            form.attr('method', method);
+            var formData = $(this).serialize();
+            $.ajax({
+                url: "/confirm_order",
+                type: "POST",
+                data: formData,
+                success: function(res){
+                    if(res.success){
+                        var options = {
+                            "key": ""+res.key_id+"", // Enter the Key ID generated from the Dashboard
+                            "amount": ""+res.amount+"", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+                            "currency": "INR",
+                            "name": "Orders",
+                            "description": "Test Transaction",
+                            "image": "/images/resources/dclogo.png",
+                            "order_id": ""+res.order_id+"", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+                            "handler": function (response){
+                                // Submit the form to a separate route for further processing
+                                var form = $('.pay-form');
+                                var url = form.attr('action');
+                                var method = form.attr('method');
+                                $('<input>').attr({
+                                    type: 'hidden',
+                                    name: 'paymentMethod',
+                                    value: paymentMethod
+                                }).appendTo(form);
+                                form.attr('action', '/payment_success');
+                                form.attr('method', 'POST');
+                                form.unbind('submit').submit();
+                                form.attr('action', url);
+                                form.attr('method', method);
+                            },
+                            "prefill": {
+                                "name": ""+res.name+"",
+                                "email": ""+res.email+"",
+                                "contact": ""+res.mobile+""
+                            },
+                            "notes": {
+                                "address": "Razorpay Corporate Office"
+                            },
+                            "theme": {
+                                "color": "#000"
+                            }
+                        };
+                        var rzp1 = new Razorpay(options);
+                        rzp1.on('payment.failed', function (response){
+                            alert("Payment Failed");
+                        });
+
+                        rzp1.open();
+                    } else {
+                        window.location.href='/ordersuccess'
+                    }
+                }
+            });
         }
     });
 });

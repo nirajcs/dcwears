@@ -1,11 +1,23 @@
+<script src="https://cdn.jsdelivr.net/npm/easyinvoice/dist/easyinvoice.min.js"></script>
 {{>user-header}}
+<!-- Start Banner Area -->
+	<section class="banner-area organic-breadcrumb">
+		<div class="container">
+			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+				<div class="col-first">
+					<h1>ORDERS</h1>
+				</div>
+			</div>
+		</div>
+	</section>
+<!-- End Banner Area -->
 <section class="h-100 gradient-custom">
-  <div class="container py-5 h-100">
+  <div class="container h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
       <div class="col-lg-10 col-xl-8">
         {{#each orderDetails}}
-        <div class="card my-3 border border-1" style="border-radius: 10px;">
-          <div class="card-body p-4">
+        <div class="container card my-3 border border-1" style="border-radius: 10px;">
+          <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h6 class="text-muted mb-0">Order Date : {{this.date}}</h6>
               <p class="small text-muted mb-0">Order ID : {{this.id}}</p>
@@ -31,7 +43,7 @@
                     <p class="text-muted mb-0 small">Qty: {{this.quantity}}</p>
                   </div>
                   <div class="col-md-2 text-center d-flex justify-content-center align-items-center">
-                    <p class="text-muted mb-0 small">₹{{this.price}}</p>
+                    <p class="text-muted mb-0 small"><span style="font-family: none;">₹</span>{{this.price}}</p>
                   </div>
                 </div>
                 
@@ -48,36 +60,41 @@
             </div>
 
           </div>
-          <div class="card-footer border-0 py-4"
+          <div class="row card-footer border-0 py-4"
             style="background-color: #221e1e; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-            {{#if (eq this.status "Cancelled")}}
-                <div class="d-flex">
-                    <h6 class="text-danger"><b>This order has been Cancelled</b></h6>
-                </div>
-            {{else if (eq this.status "Delivered")}}
-                {{#if this.return}}
-                    <div class="d-flex align-items-start">
-                        <h6 class="text-warning"><b>This order has been Returned</b></h6>
-                    </div>
-                {{else}}
-                    <div class="d-flex align-items-start">
-                        <a class="btn btn-warning return-button" data-bs-orderid="{{this.id}}"  data-bs-toggle="modal" data-bs-target="#returnProduct">Return Order</a>
-                    </div>
-                    {{#if returnErr}}
-                    <div class="mt-2">
-                        <p class="text-danger">{{returnErr}}</p>
-                    </div>
-                    {{else}}
-                    <div class="mt-2">
-                        <p class="text-light">You can only return before 7 days from the date of Delivery.</p>
-                    </div>
-                    {{/if}}
-                {{/if}}
-            {{else}}
-                <div class="d-flex align-items-start">
-                    <a class="btn btn-danger" onclick="cancelOrder('{{this.id}}')">Cancel Order</a>
-                </div>
-            {{/if}}
+            <div class="col-md-6">
+              {{#if (eq this.status "Cancelled")}}
+                  <div class="d-flex">
+                      <h6 class="text-danger mt-2"><b>This order has been Cancelled</b></h6>
+                  </div>
+              {{else if (eq this.status "Delivered")}}
+                  {{#if this.return}}
+                      <div class="d-flex align-items-start">
+                          <h6 class="text-warning mt-2"><b>This order has been Returned</b></h6>
+                      </div>
+                  {{else}}
+                      <div class="d-flex align-items-start">
+                          <a class="btn btn-warning return-button" data-bs-orderid="{{this.id}}"  data-bs-toggle="modal" data-bs-target="#returnProduct">Return Order</a>
+                      </div>
+                      {{#if returnErr}}
+                      <div class="mt-2">
+                          <p class="text-danger">{{returnErr}}</p>
+                      </div>
+                      {{else}}
+                      <div class="mt-2">
+                          <p class="text-light">You can only return before 7 days from the date of Delivery.</p>
+                      </div>
+                      {{/if}}
+                  {{/if}}
+              {{else}}
+                  <div class="d-flex align-items-start">
+                      <a class="btn btn-danger text-white" onclick="cancelOrder('{{this.id}}')">Cancel Order</a>
+                  </div>
+              {{/if}}
+            </div>
+            <div class="col-md-6 text-right">
+              <button class="btn btn-secondary btn-sm" onclick="invoiceGenerate('{{this.id}}')" style="font-size: 12px;">Download Invoice</button>
+            </div>
           </div>
         </div>
         <hr>
@@ -151,3 +168,87 @@
         })
     })
 </script>
+
+
+{{!-- EASY INVOICE --}}
+<script>
+
+    const invoiceGenerate = (orderId) => {
+      const order = JSON.parse(decodeURIComponent('{{orders}}'));
+      const products = JSON.parse(decodeURIComponent('{{orderProducts}}'))
+      let selectOrder = order.find(order => order._id === orderId)
+      let selectOrderProducts = products.find(item => item.id === orderId);
+      console.log(selectOrder)
+      console.log(selectOrderProducts)
+      let invoiceProducts = [];
+      for (let i = 0; i < selectOrderProducts.products.length; i++) {
+        invoiceProducts.push({
+          quantity: selectOrderProducts.products[i].quantity,
+          description: selectOrderProducts.products[i].name,
+          'tax-rate': 0.00,
+          price: selectOrderProducts.products[i].price,
+        });
+      }
+
+      var data = {
+
+        // Customize enables you to provide your own templates
+        // Please review the documentation for instructions and examples
+        "customize": {
+          //  "template": fs.readFileSync('template.html', 'base64') // Must be base64 encoded html 
+        },
+        "images": {
+          // The logo on top of your invoice
+          "logo": "https://public.easyinvoice.cloud/img/logo_en_original.png",
+          // The invoice background
+          "background": "https://public.easyinvoice.cloud/img/watermark-draft.jpg"
+        },
+        "sender": {
+          "company": "DC Wears",
+          "address": "TCR Square",
+          "zip": "680562",
+          "city": "Thrissur",
+          "country": "India"
+        },
+        "client": {
+          "company": selectOrder.user,
+          "address": selectOrder.address,
+          "zip": selectOrder.mobile,
+          "city": selectOrder.email,
+        },
+        "information": {
+          "number": selectOrderProducts.id,
+          "date": selectOrderProducts.date,
+          "due-date": selectOrderProducts.date
+        },
+        "products": invoiceProducts,
+        "bottomNotice": "Thanks for purchasing from us..",
+        "currency": "INR"
+      };
+
+      // Create your invoice using EasyInvoice
+      easyinvoice.createInvoice(data, function (result) {
+        // The response will contain a base64 encoded PDF file
+        console.log('PDF base64 string:', result.pdf);
+        var base64Data = result.pdf;
+
+        // Convert the base64 data to a Blob object
+        var byteCharacters = atob(base64Data);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        var blob = new Blob([byteArray], { type: 'application/pdf' });
+
+        // Create a temporary download link and trigger the download
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'invoice.pdf';
+        link.click();
+      });
+    }
+  </script>
+
+
+<script src="https://unpkg.com/easyinvoice/dist/easyinvoice.min.js"></script>

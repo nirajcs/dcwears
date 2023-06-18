@@ -1,4 +1,5 @@
 const adminController=require('../controller/adminController')
+const middlewareController = require('../controller/middlewareController')
 var express = require('express');
 var router = express.Router();
 
@@ -29,7 +30,7 @@ const upload = multer({storage:storage})
 const bannerUpload = multer({storage:bannerStorage})
 
 /* Admin login */
-router.get('/',adminController.isAdminLogout,adminController.adminLoginLoad)
+router.get('/',middlewareController.isAdminLogout,adminController.adminLoginLoad)
 router.post('/',adminController.adminVerify)
 router.get('/forget',adminController.forgetLoad)
 router.post('/forget',adminController.forgetVerify)
@@ -40,38 +41,48 @@ router.post('/reset',adminController.confirmPasswordCheck,adminController.setRes
 router.get('/logout',adminController.adminLogout)
 
 // Admin dashboard
-router.get('/adminhome',adminController.isAdminLogIn,adminController.dashboardLoad)
+router.get('/adminhome',middlewareController.isAdminLogIn,adminController.dashboardLoad)
 
 //Admin Banners
-router.get('/addbanners',adminController.isAdminLogIn,adminController.addBanner)
+router.get('/addbanners',middlewareController.isAdminLogIn,adminController.addBanner)
 router.post('/addbanners',bannerUpload.single('image'),adminController.bannerImage)
-router.get('/activatebanner/:id',adminController.isAdminLogIn,adminController.activateBanner)
-router.get('/removebanner/:id',adminController.isAdminLogIn,adminController.removeBanner)
+router.get('/activatebanner/:id',middlewareController.isAdminLogIn,adminController.activateBanner)
+router.get('/removebanner/:id',middlewareController.isAdminLogIn,adminController.removeBanner)
 
 //Admin product
-router.get('/adminproduct',adminController.isAdminLogIn,adminController.adminProductLoad)
-router.get('/addProduct',adminController.isAdminLogIn,adminController.addProductLoad)
+router.get('/adminproduct',middlewareController.isAdminLogIn,adminController.adminProductLoad)
+router.get('/addProduct',middlewareController.isAdminLogIn,adminController.addProductLoad)
 router.post('/addProduct',upload.array('image',5),adminController.insertProduct)
 router.get('/deleteproduct/',adminController.deleteProduct)
 router.get('/editproduct/',adminController.editProductLoad)
 router.post('/editProduct/',upload.array('image',5),adminController.editProduct)
 
 //admin category
-router.get('/category',adminController.isAdminLogIn,adminController.categoryLoad)
+router.get('/category',middlewareController.isAdminLogIn,adminController.categoryLoad)
 router.post('/addcategory',adminController.addCategory)
-router.get('/delete-category/',adminController.isAdminLogIn,adminController.deleteCategory)
+router.post('/editcategory',adminController.editCategory)
+router.get('/delete-category/',middlewareController.isAdminLogIn,adminController.deleteCategory)
+
+//COUPONS
+router.get('/coupons',middlewareController.isAdminLogIn,adminController.couponLoad)
+router.post('/addcoupon',adminController.addCoupon)
+router.post('/editcoupon',adminController.editCoupon)
+router.get('/deletecoupon',adminController.deleteCoupon)
 
 //Admin userlist
-router.get('/userlist',adminController.isAdminLogIn,adminController.usersListLoad)
-router.get('/blockuser/',adminController.isAdminLogIn,adminController.userBlock)
-router.get('/unblockuser',adminController.isAdminLogIn,adminController.userUnblock)
+router.get('/userlist',middlewareController.isAdminLogIn,adminController.usersListLoad)
+router.get('/blockuser/',middlewareController.isAdminLogIn,adminController.userBlock)
+router.get('/unblockuser',middlewareController.isAdminLogIn,adminController.userUnblock)
 
 //Admin Orders
-router.get('/orders',adminController.isAdminLogIn,adminController.loadOrders)
-router.get('/orderInfo/:id',adminController.isAdminLogIn,adminController.orderInfo)
-router.post('/statuschange',adminController.isAdminLogIn,adminController.updateStatus)
-router.get('/return_details',adminController.isAdminLogIn,adminController.returnDetails)
-router.get('/returninfo/:id',adminController.isAdminLogIn,adminController.returnInfo)
+router.get('/orders',middlewareController.isAdminLogIn,adminController.loadOrders)
+router.get('/orderInfo/:id',middlewareController.isAdminLogIn,adminController.orderInfo)
+router.post('/statuschange',middlewareController.isAdminLogIn,adminController.updateStatus)
+
+//Admin Order Return
+router.get('/return_details',middlewareController.isAdminLogIn,adminController.returnDetails)
+router.post('/pickupstatus',middlewareController.isAdminLogIn,adminController.pickupStatus)
+router.get('/returninfo/:id',middlewareController.isAdminLogIn,adminController.returnInfo)
 
 
 module.exports = router;

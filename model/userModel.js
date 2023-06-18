@@ -13,6 +13,10 @@ const userSchema=new mongoose.Schema({
         type:Number,
         required:true
     },
+    wallet:{
+        type:Number,
+        default:0
+    },
     address:[
         {
             address_type:{

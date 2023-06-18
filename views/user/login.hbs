@@ -1,30 +1,4 @@
-{{!-- 
-<div class="main-div">
-    <div class="d-flex login-parent ps-2 rounded row">
-        <div class="login-form p-3 col-8">
-            <form action="/" method="post">
-                <h3 class="text-center">Log in</h3>
-                <div class="my-2">
-                    <label for="exampleInputEmail1" class="form-label">Email address</label>
-                    <input type="email" class="form-control" id="exampleInputEmail1" name="email">
-                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
-                </div>
-                <div class="my-2">
-                    <label for="exampleInputPassword1" class="form-label">Password</label>
-                    <input type="password" class="form-control" name="password">
-                </div>
-                <div class="d-flex">
-                    <button type="submit" class="btn btn-primary my-2">Log in</button>
-                    <p class="text-danger ps-2 mt-3">{{message}}</p>
-                </div>
-            </form>
-        <p class="mt-2">New User? <a href="/register">Sign Up</a></p>
-        </div>
-        <div class="col-4">
-            <img src="/images/resources/dc.jpg" alt="logo" class="login-img rounded-end">
-        </div>
-    </div>
-</div> --}}
+
 {{>main-header}}
 <!-- Section: Design Block -->
 <div class="main-div">
@@ -45,11 +19,11 @@
       }
     }
   </style>
-  <div class="card mb-3">
+  <div class="container card mb-3">
     <div class="row g-0 d-flex align-items-center">
-      <div class="col-lg-4 d-none d-lg-flex">
+      <div class="col-lg-4 d-none p-0 d-lg-flex">
         <img src="/images/resources/dclogo.png" alt="DC Logo"
-          class="w-100 rounded-t-5 rounded-tr-lg-0 rounded-bl-lg-5" />
+          class="w-100 rounded" />
       </div>
       <div class="col-lg-8">
         <div class="card-body py-2 px-md-5">
@@ -59,13 +33,13 @@
                 <h2 class="mb-2">Log In</h2>
             </div>
             <!-- Email input -->
-            <div class="form-outline my-2">
+            <div class="form-outline my-2 text-left">
               <label class="form-label" for="form2Example1">Email address</label>
               <input type="email" id="form2Example1" name="email" class="form-control" required/>
             </div>
 
             <!-- Password input -->
-            <div class="form-outline my-2">
+            <div class="form-outline my-2 text-left">
               <label class="form-label" for="form2Example2">Password</label>
               <input type="password" id="form2Example2" name="password" class="form-control" required/>
             </div>

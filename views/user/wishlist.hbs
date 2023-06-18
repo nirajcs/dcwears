@@ -1,0 +1,115 @@
+{{>user-header}}
+<!-- Start Banner Area -->
+	<section class="banner-area organic-breadcrumb">
+		<div class="container">
+			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+				<div class="col-first">
+					<h1>WISHLIST</h1>
+				</div>
+			</div>
+		</div>
+	</section>
+<!-- End Banner Area -->
+{{#if message}}
+    <div class="card container mt-3">
+      <div class="card-body text-center text-muted">
+        <p>{{message}}</p>
+      </div>
+    </div>
+{{else}}
+    <section style="background-color: #eee;">
+      <div class="container py-5">
+        {{!-- START --}}
+        {{#each products}}
+          <div class="row justify-content-center mb-3">
+            <div class="col-md-12 col-xl-10">
+              <div class="card shadow-0 border rounded-3">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-12 col-lg-3 col-xl-3 mb-4 mb-lg-0">
+                      <div class="bg-image hover-zoom ripple rounded ripple-surface">
+                        <img src="images/products/{{this.product_id.image.[2]}}"
+                          class="w-100" />
+                        <a href="#!">
+                          <div class="hover-overlay">
+                            <div class="mask" style="background-color: rgba(253, 253, 253, 0.15);"></div>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-lg-6 col-xl-6 d-flex flex-column justify-content-center">
+                      <h3>{{this.product_id.name}}</h3>
+                      <p class="mb-4 mb-md-0" id="description">{{{formatDescription this.product_id.description}}}</p>
+                      {{!-- FORM STARTS --}}
+                      <form action="/addtocart" method="post">
+                      <div class="mt-2">
+                        <label class="radio">
+                        <input type="radio" name="size" value="S" required/>
+                        <span>S</span>
+                        </label>
+                        <label class="radio">
+                          <input type="radio" name="size" value="M" required/>
+                          <span>M</span>
+                        </label>
+                        <label class="radio">
+                          <input type="radio" name="size" value="L" required/>
+                          <span>L</span>
+                        </label>
+                        <label class="radio">
+                          <input type="radio" name="size" value="XL" required/>
+                          <span>XL</span>
+                        </label>
+                        <label class="radio">
+                          <input type="radio" name="size" value="XXL" required/>
+                          <span>XXL</span>
+                        </label>
+                      </div>
+                      <input type="hidden" value="{{this.product_id._id}}" name="prodId">
+                      <input type="hidden" name="price" id="price" value="{{this.product_id.price}}">
+                      <input type="hidden" value="wishlist" name="page">
+                    </div>
+                    <div class="col-md-6 col-lg-3 col-xl-3 border-sm-start-none border-start">
+                      <div class="d-flex flex-row align-items-center mb-1">
+                        <h3 class="mb-1 me-1"><span style="font-family: none;">₹</span>{{this.product_id.price}}</h3>
+                      </div>
+                      <h6 class="text-success">Free shipping</h6>
+                      <div class="d-flex flex-column mt-4">
+                        <input type="submit" class="btn btn-outline-primary btn-sm" value="Add to cart">
+                        </form>
+                        {{!-- FORM ENDS --}}
+                        <a onclick="deleteItem('{{this._id}}')" class="btn btn-danger text-white btn-sm mt-2">Remove</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    </section>
+{{/if}}
+
+<script>
+  function deleteItem(Id) {
+      Swal.fire({
+          title: 'Are you sure to remove this Item?',
+          text: "Item will be removed from the wishlist",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Remove!'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire(
+                  'Removed!',
+                  'Item has been Removed.',
+                  'success'
+              ).then(() => {
+                  window.location.href = '/removeWishlist?id='+Id;
+              });
+          }
+      });
+  }
+</script>

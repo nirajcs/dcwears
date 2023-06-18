@@ -1,0 +1,194 @@
+{{>admin-header}}
+<div class="m-3 mt-4 pt-5 px-4">
+<a href="/admin/addcoupon" class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#couponAdd">Add Coupon</a>
+  <div class="mt-2">
+    <table class="table mt-2" id="productsTable">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Discount Amount</th>
+            <th scope="col">Description</th>
+            <th scope="col">Applicable Amount</th>
+            <th scope="col">Date added</th>
+            <th scope="col">Expiry Date</th>
+            <th scope="col">Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each couponDetails}}
+            <tr>
+                <td scope="col">{{inc @index}}</td>
+                <td scope="col">{{this.name}}</td>
+                <td scope="col">{{this.discount}}</td>
+                <td scope="col">{{this.description}}</td>
+                <td scope="col">{{this.applicable}}</td>
+                <td scope="col">{{formatDate this.dateReleased}}</td>
+                <td scope="col">{{formatDate this.dateExpiry}}</td>
+                <td>
+                    <button type="button" class="btn btn-secondary edit-btn" data-bs-toggle="modal"
+                        data-bs-target="#couponEdit" data-id="{{this._id}}" data-name="{{this.name}}"
+                        data-description="{{this.description}}" data-discount="{{this.discount}}"
+                        data-dateExpiry="{{this.dateExpiry}}" data-applicable="{{this.applicable}}">Edit
+                    </button>
+                    <a class="btn btn-danger"  onclick="deleteCoupon('{{this._id}}')">Remove</a>
+                </td>
+            </tr>
+        {{/each}}
+    </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="couponAdd" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">ADD COUPON</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/admin/addcoupon" method="post">
+            <div class="form-group my-3">
+                <label for="nameInput">Name</label>
+                <input type="text" class="form-control form-control-sm" id="nameInput" name="couponname" placeholder="Enter Name" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Discount Amount</label>
+                <input type="number" class="form-control form-control-sm" id="nameInput" min="1" name="amount" placeholder="Enter Price" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Description</label>
+                <input type="text" class="form-control form-control-sm" id="nameInput" name="description" placeholder="Enter Description" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Minimum Amount</label>
+                <input type="Number" class="form-control form-control-sm" id="nameInput" name="minamount" placeholder="Enter Minimum Amount" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Expiry Date</label>
+                <input type="date" class="form-control form-control-sm" id="nameInput" name="date" required>
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <input type="submit" class="btn btn-primary" value="Add">
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+
+
+<!-- Modal -->
+<div class="modal fade" id="couponEdit" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">ADD COUPON</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/admin/editcoupon" method="post">
+            <input type="hidden" id="couponid" name="id">
+            <div class="form-group my-3">
+                <label for="nameInput">Name</label>
+                <input type="text" class="form-control form-control-sm" id="editCouponName" name="couponname" placeholder="Enter Name" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Discount Amount</label>
+                <input type="number" class="form-control form-control-sm" id="editCouponAmount" min="1" name="amount" placeholder="Enter Price" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Description</label>
+                <input type="text" class="form-control form-control-sm" id="editCouponDescription" name="description" placeholder="Enter Description" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Minimum Amount</label>
+                <input type="Number" class="form-control form-control-sm" id="editCouponMin" name="minamount" placeholder="Enter Minimum Amount" required>
+            </div>
+            <div class="form-group my-3">
+                <label for="nameInput">Expiry Date</label>
+                <input type="date" class="form-control form-control-sm" id="editCouponExpiry" name="date" required>
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <input type="submit" class="btn btn-primary" value="Edit">
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+
+<script>
+  $(function () {
+    $('#productsTable').DataTable({
+      order: [[1, 'asc']], // Sort by the second column by default
+    rowCallback: function(row, data, index) {
+      var api = this.api();
+      var rowNum = api.page.info().start + index + 1;
+      $(row).find('td:eq(0)').text(rowNum); // Assign the row number to the first column
+    }
+    });
+  });
+
+</script>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const editButtons = document.querySelectorAll('.edit-btn'); // Select all edit buttons
+
+    editButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = this.dataset.id;
+        const name = this.dataset.name;
+        const description = this.dataset.description;
+        const discount = this.dataset.discount;
+        const applicable = this.dataset.applicable;
+        const dateExpiry = this.dataset.dateExpiry;
+
+        // Populate values in the edit modal
+        document.getElementById('couponid').value = id
+        document.getElementById('editCouponName').value = name;
+        document.getElementById('editCouponDescription').value = description;
+        document.getElementById('editCouponAmount').value = discount;
+        document.getElementById('editCouponMin').value = applicable;
+        document.getElementById('editCouponExpiry').value =formatDate(dateExpiry);
+      });
+    });
+  });
+</script>
+
+<script>
+  function deleteCoupon(couponId) {
+      Swal.fire({
+          title: 'Are you sure to delete this Coupon?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Delete!'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              Swal.fire(
+                  'Deleted!',
+                  'Product has been deleted.',
+                  'success'
+              ).then(() => {
+                  window.location.href = '/admin/deletecoupon?id=' + couponId;
+              });
+          }
+      });
+  }
+</script>

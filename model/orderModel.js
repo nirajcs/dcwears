@@ -63,6 +63,10 @@ const orderSchema = new mongoose.Schema({
         reason:{
             type:String,
             required:false
+        },
+        pickup:{
+            type:Boolean,
+            default:false,
         }
     }
 });

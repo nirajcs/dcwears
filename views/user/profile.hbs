@@ -1,11 +1,22 @@
 {{>user-header}}
+<!-- Start Banner Area -->
+	<section class="banner-area organic-breadcrumb">
+		<div class="container">
+			<div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+				<div class="col-first">
+					<h1>PROFILE</h1>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- End Banner Area -->
 <section class="pt-4" style="background-color: #eee;">
   <div class="container py-5">
     <div class="row">
       <div class="col">
         <nav aria-label="breadcrumb" class="bg-light rounded-3 p-3 mb-4 d-flex justify-content-between">
-          <h4>USER PROFILE</h5>
-          <a class="btn btn-success" data-bs-toggle="modal" data-bs-target="#profileEdit">Edit Profile</a>
+          <h4 class="pt-2">USER PROFILE</h5>
+          <a class="btn btn-success text-white" data-bs-toggle="modal" data-bs-target="#profileEdit">Edit Profile</a>
         </nav>
       </div>
     </div>
@@ -14,33 +25,48 @@
       <div class="col-md-12">
         <div class="card mb-4">
           <div class="card-body">
-            <div class="row">
-              <div class="col-sm-6">
-                <p class="mb-0" style="text-align: right;"><b>Name</b></p>
+            <div class="row d-flex">
+              <div class="ms-4 col-md-6">
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0"><b class="text-dark">Name</b></p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">{{user.name}}</p>
+                  </div>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0"><b class="text-dark">Email</b></p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">{{user.email}}</p>
+                  </div>
+                </div>
+                <hr>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0"><b class="text-dark">Phone</b></p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">{{user.mobile}}</p>
+                  </div>
+                </div>
               </div>
-              <div class="col-sm-6">
-                <p class="text-muted mb-0">{{user.name}}</p>
+              <div class="col-md-5">
+                <div class="card text-dark bg-light mb-3" style="max-width: 18rem;">
+                  <div class="card-header fw-bold"><h4>Wallet</h4></div>
+                  <div class="card-body d-flex">
+                    <h5 class="card-title me-3">Balance:</h5>
+                    <p class="card-text">{{user.wallet}}</p>
+                  </div>
+                </div>
               </div>
+              {{!-- <div class="col-md-4">
+
+              </div> --}}
             </div>
-            <hr>
-            <div class="row">
-              <div class="col-sm-6">
-                <p class="mb-0" style="text-align: right;"><b>Email</b></p>
-              </div>
-              <div class="col-sm-6">
-                <p class="text-muted mb-0">{{user.email}}</p>
-              </div>
-            </div>
-            <hr>
-            <div class="row">
-              <div class="col-sm-6">
-                <p class="mb-0" style="text-align: right;"><b>Phone</b></p>
-              </div>
-              <div class="col-sm-6">
-                <p class="text-muted mb-0">{{user.mobile}}</p>
-              </div>
-            </div>
-            <hr>
             <div class="row px-3">
               <p class="text-center"><u><b>Address</b></u></p>
               {{#each user.address}}
@@ -49,14 +75,17 @@
                       <div class="card-body">
                           <div class="d-flex justify-content-between">
                               <h5 class="card-title">{{this.address_type}}</h5>
-                              <a onclick="deleteAddress('{{this._id}}')" style="cursor: pointer;"><i class="fa-solid fa-trash" style="color: #f60404;"></i></a>
+                              <div>
+                                <a class="edit-btn" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#addressEdit" data-id="{{this._id}}" data-type="{{this.address_type}}" data-address="{{this.address}}"><i class="fa-solid fa-pen mx-1" style="color: #808080;"></i></a>
+                                <a onclick="deleteAddress('{{this._id}}')" style="cursor: pointer;"><i class="fa-solid fa-trash mx-1" style="color: #f60404;"></i></a>
+                              </div>
                           </div>
                           <p class="card-text">{{this.address}}</p>
                       </div>
                   </div>
                 </div>
               {{/each}}
-                <a class="btn btn-secondary mt-3" data-bs-toggle="modal" data-bs-target="#addAddress">Add Address</a>
+                <a class="btn text-white btn-secondary mt-3" data-bs-toggle="modal" data-bs-target="#addAddress">Add Address</a>
             </div>
             <hr>
           </div>
@@ -132,6 +161,58 @@
     </div>
   </div>
 </div>
+
+<!-- Edit Address Modal -->
+<div class="modal fade" id="addressEdit" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Edit Address</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="/address_edit" method="post">
+        <input type="hidden" name="id" id="addressId">
+            <div class="AddressTypeInput my-2">
+                <label for="type" class="my-2">Type</label><br>
+                <input class="form-control" type="text" name="type" id="addresstype" required>
+            </div>
+            <div class="AddressInput my-2">
+                <label for="address" class="my-2">Address</label><br>
+                <textarea class="form-control" name="address" id="address" rows="4" required></textarea>
+            </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <input type="submit" class="btn btn-primary" value="Save Changes">
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const editButtons = document.querySelectorAll('.edit-btn'); // Select all edit buttons
+
+    editButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = this.dataset.id;
+        const type = this.dataset.type;
+        const address = this.dataset.address;
+        console.log(type)
+
+        // Populate values in the edit modal
+        document.getElementById('addressId').value = id
+        document.getElementById('addresstype').value = type;
+        document.getElementById('address').value = address;
+      });
+    });
+  });
+</script>
 
 
 <script>

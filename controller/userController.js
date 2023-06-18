@@ -5,6 +5,8 @@ const Category = require('../model/categoryModel')
 const Banner = require('../model/bannerModel')
 const Cart = require('../model/cartModel')
 const Order = require('../model/orderModel')
+const Wishlist = require('../model/wishlistModel')
+const Coupon = require('../model/couponModel')
 const bcrypt = require('bcrypt')
 const Razorpay = require('razorpay')
 const nodemailer = require('nodemailer')
@@ -21,16 +23,23 @@ var instance = new Razorpay({
 
 //PAGELOAD
 //Loads the home page
+
+const mainLoad=async(req,res)=>{
+    let username=req.session.username
+    let session=req.session.loggedIn
+    const banner = await Banner.findOne({activate:true})
+    let newProducts = await Product.find({}).sort({createdAt:-1}).limit(4).lean()
+    console.log(newProducts)
+    res.render('user/home',{banner:banner.image,newProducts,session,username,homeActive:true})
+}
+
 const homeLoad=async(req,res)=>{
     try {
-        const banner = await Banner.findOne({activate:true})
         const categoryList=await Category.find({}).lean()
         const products=await Product.find({}).lean()
-        // console.log("HI BANNER")
         let username=req.session.username
         let session=req.session.loggedIn
-        console.log(banner.image)
-        res.render('user/home',{banner:banner.image,products,categoryList,session,username})
+        res.render('user/products',{products,categoryList,session,username,productActive:true})
     } catch (error) {
         console.log(error.message)
     }
@@ -40,14 +49,11 @@ const sortProducts=async(req,res)=>{
     try {
         let sort = req.query.sort
         console.log(sort)
-        const banner = await Banner.findOne({activate:true})
         const categoryList=await Category.find({}).lean()
         const products=await Product.find({}).sort({price:req.query.sort}).lean()
-        // console.log("HI BANNER")
         let username=req.session.username
         let session=req.session.loggedIn
-        console.log(banner.image)
-        res.render('user/home',{banner:banner.image,products,categoryList,session,username})
+        res.render('user/products',{products,categoryList,session,username,productActive:true})
     } catch (error) {
         console.log(error.message)
     }
@@ -55,14 +61,13 @@ const sortProducts=async(req,res)=>{
 
 //Loads the page according to the mentioned category
 const categorywiseLoad=async(req,res)=>{
-    const banner = await Banner.findOne({activate:true})
     const categoryList=await Category.find({}).lean()
-    let categoryName = req.params.category
+    let categoryName = req.query.category
     let products=await Product.find({category:categoryName}).lean()
     let username=req.session.username
     let session=req.session.loggedIn
     console.log(products)
-    res.render('user/home',{title:'DC Wears',banner:banner.image,products,categoryList,session,username})
+    res.render('user/products',{products,categoryList,session,username,productActive:true})
 }
 
 const loginLoad=(req,res)=>{
@@ -118,14 +123,13 @@ const sendVerifyMail=(name,email,user_id)=>{
 //Searching prodducts user regex in mongoose
 const searchProduct=async(req,res)=>{
     try {
-        const banner = await Banner.findOne({activate:true})
         const categoryList=await Category.find({}).lean()
         let search=req.query.search
         let searchRegex=new RegExp(search,'i')
         let searchedProduct=await Product.find({name:{$regex:searchRegex}}).lean()
         let username=req.session.username
         let session=req.session.loggedIn
-        res.render('user/home',{title:"DC Wears",banner:banner.image,products:searchedProduct,categoryList,session,username})
+        res.render('user/products',{products:searchedProduct,categoryList,session,username,productActive:true})
     } catch (error) {
         console.log(error.message)
     }
@@ -407,31 +411,6 @@ const verifyForgetMail =async(req,res)=>{
     }
 }
 
-//LOGIN AUTHENTICATION
-const isLoggedIn=(req,res,next)=>{
-    try {
-        if(req.session.loggedIn){
-            res.redirect('/')
-        }else{
-            next()
-        }
-    } catch (error) {
-        console.log(error.message)
-    }
-}
-
-const isLoggedOut=(req,res,next)=>{
-    try {
-        if(req.session.loggedIn){
-            next()
-        }else{
-            res.redirect('/login')
-        }
-    } catch (error) {
-        console.log(error.message)
-    }
-}
-
 
 //LOGOUT
 const logout=(req,res)=>{
@@ -453,10 +432,26 @@ const profileView=async(req,res)=>{
         let username=req.session.username
         let session=req.session.loggedIn
         let user=await User.findById(userId).lean()
-        console.log(user)
-        res.render('user/profile',{user,username,session})
+        res.render('user/profile',{user,username,session,profileActive:true})
     } catch (error) {
         console.log(error.message)
+    }
+}
+
+const profileEditAddress=async(req,res)=>{
+    try {
+        let {id,type,address} = req.body
+        let userDetails = await User.findById(req.session.userId)
+        let userAddress = userDetails.address.id(id)
+        userAddress.address_type = type;
+        userAddress.address = address;
+        let success = userDetails.save()
+        if(success){
+            console.log("Edit Successful")
+        }
+        res.redirect('/userprofile')
+    } catch (error) {
+        
     }
 }
 
@@ -579,10 +574,13 @@ const singleProductLoad =async(req,res)=>{
     try {
         let product_id=req.query.id
         let productDetails=await Product.findById(product_id).lean()
+        let categoryDetails =await Category.find({})
         console.log(productDetails)
         let username=req.session.username
         let session=req.session.loggedIn
-        res.render('user/product-details',{title:'DC WEARS',productDetails,username,session,initialImage:productDetails.image[2]})  
+        let isWishlist = await Wishlist.findOne({ products: { $elemMatch: { product_id: product_id } } });
+        console.log(isWishlist)
+        res.render('user/product-details',{category:encodeURIComponent(JSON.stringify(categoryDetails)),productDetails,username,session,isWishlist,initialImage:productDetails.image[2],productActive:true})  
     } catch (error) {
         console.log(error.message);
     }
@@ -597,29 +595,31 @@ const userCart=async(req,res)=>{
         let cart= await Cart.findOne({userid:req.session.userId}).populate("products.productid")
         console.log(cart)
         if (cart) {
-
-            let products=cart.products
-            let total=cart.total
-            console.log(products.length);
-            const cartData= products.map(prod => {
-                    return({
-                        prod_id: prod.productid._id.toString(),
-                        name: prod.productid.name,
-                        price: prod.productid.price,
-                        quantity: prod.quantity,
-                        size:prod.size,
-                        image: prod.productid.image
+            if (cart.products.length===0){
+                res.render('user/user-cart',{title:'User Cart',username,session,message:"CART IS EMPTY",cartActive:true})
+            }else{
+                let products=cart.products
+                let total=cart.total
+                console.log(products.length);
+                const cartData= products.map(prod => {
+                        return({
+                            prod_id: prod.productid._id.toString(),
+                            name: prod.productid.name,
+                            price: prod.productid.price,
+                            quantity: prod.quantity,
+                            offer:prod.offerPrice,
+                            size:prod.size,
+                            image: prod.productid.image
+                        })
                     })
-                })
-                console.log(total)
-                if(products.length===0){
-                    await Cart.findOneAndDelete({userid:req.session.userId})
-                }
-            res.render('user/user-cart',{title:"User Cart",totalPrice:total,cartData,username,session})
-
+                    console.log(total)
+                    if(products.length===0){
+                        await Cart.findOneAndDelete({userid:req.session.userId})
+                    }
+                res.render('user/user-cart',{title:"User Cart",totalPrice:total,cartData,username,session,cartActive:true})
+            }
         }else{
-            console.log("cart illa tta")
-            res.render('user/user-cart',{title:'User Cart',username,session,message:"cart is empty"})
+            res.render('user/user-cart',{title:'User Cart',username,session,message:"CART IS EMPTY",cartActive:true})
         }
         } catch (error) {
         console.log(error.message)
@@ -631,33 +631,35 @@ const addToCart=async(req,res)=>{
         let psize = req.body.size
         let prodId=req.body.prodId
         let userId = req.session.userId
+        let offer = req.body.price
         console.log(req.body)
         console.log(psize);
         console.log(prodId);
-        // let username=req.session.username
-        // let session=req.session.loggedIn
-        // if(req.session.userId){
         let userCart=await Cart.findOne({userid:userId})
         if(!userCart){
             const newCart = new Cart({userid:userId,total:0,products:[]})
+
             await newCart.save()
             userCart = newCart
         }
-        // console.log(userCart)
 
         const productIndex=userCart?.products.findIndex((product)=>(product.productid==prodId && product.size==psize))
         console.log(productIndex)
         if(productIndex==-1){
-            userCart.products.push({productid:prodId,quantity:1,size:psize})
+            userCart.products.push({productid:prodId,quantity:1,size:psize,offerPrice:offer})
             userCart.total+=Number(req.body.price)
         }else{
             userCart.products[productIndex].quantity+=1
         }
         await userCart.save()
 
-        setTimeout(() => {
-            res.redirect('/productload'+'?id='+prodId)
-        }, 2000);
+        if(req.body.page=="wishlist"){
+            res.redirect('/wishlist') 
+        }else{
+            setTimeout(() => {
+                res.redirect('/productload'+'?id='+prodId)
+            }, 2000);
+        }
         
     } catch (error) {
         console.log(error.message)
@@ -724,6 +726,68 @@ const deleteCart = async (req, res) => {
 };
 
 
+//WISHLIST
+const addToWishlist = async(req,res)=>{
+        try {
+            let {id}=req.query
+            console.log(id)
+            let wishlist = await Wishlist.findOne({user_id:req.session.userId})
+            if(wishlist){
+                let addItem = await Wishlist.findOneAndUpdate({user_id:req.session.userId},{$push:{products:{product_id:id}}})
+                if(addItem){
+                    console.log("Product added to wishlist")
+                }
+            }else{
+                let newWishlist = new Wishlist({
+                    user_id:req.session.userId,
+                    products:[{product_id:id}]
+                })
+                let newList = await newWishlist.save()
+                if(newList){
+                    console.log("New list created")
+                }
+            }
+            res.redirect('/productload?id='+id)
+
+        } catch (error) {
+            console.log(error.message)
+        }
+}
+
+const wishlistLoad = async(req,res)=>{
+    try {
+        let username=req.session.username
+        let session=req.session.loggedIn
+        let wishList = await Wishlist.findOne({user_id:req.session.userId}).populate('products.product_id').lean()
+        console.log("CHECK")
+        if (wishList) {
+            if (wishList.products.length === 0) {
+              res.render('user/wishlist', { message: "WISHLIST IS EMPTY", username, session, wishlistActive: true });
+            } else {
+              res.render('user/wishlist', { products: wishList.products, username, session, wishlistActive: true });
+            }
+          }else{
+            res.render('user/wishlist', { message: "WISHLIST IS EMPTY", username, session, wishlistActive: true });
+          }
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+const removeWishlist = async(req,res)=>{
+    try {
+        let {id} = req.query
+        let removeProduct = await Wishlist.updateOne({user_id:req.session.userId},{$pull:{products:{_id:id}}})
+        if(removeProduct){
+            console.log("Product removed successfully")
+        }
+        res.redirect('/wishlist')
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+
 //USER ORDERS
 //order management on user side
 const myOrders=async(req,res)=>{
@@ -732,7 +796,7 @@ const myOrders=async(req,res)=>{
         let session=req.session.loggedIn
         console.log("My orders")
         let orders=await Order.find({userid:req.session.userId}).populate('products.productid').sort({orderDate:-1})
-        // console.log(orders)
+        console.log(orders)
         if(orders){
             let orderDetails = orders.map(data=>{
                 return({
@@ -753,7 +817,8 @@ const myOrders=async(req,res)=>{
                     payment:data.payment_method
                 })
             })
-            res.render('user/orders',{username,session,orderDetails,returnErr:req.session.returnErr})
+            console.log(orderDetails)
+            res.render('user/orders',{orderProducts:encodeURIComponent(JSON.stringify(orderDetails)),orders:encodeURIComponent(JSON.stringify(orders)),username,session,orderDetails,returnErr:req.session.returnErr,orderActive:true})
             req.session.returnErr=""
         }else{
             res.render('user/orders',{username,session,message:"No Orders",noOrders:true})
@@ -767,8 +832,16 @@ const myOrders=async(req,res)=>{
 const orderCancel=async(req,res)=>{
     try {
         let id=req.params.id
-        let cancelOrder = await Order.findByIdAndUpdate(id,{$set:{status:"Cancelled"}})
-        if(cancelOrder){
+        let cancelOrder = await Order.findById(id)
+        console.log(cancelOrder)
+        let total = cancelOrder.total
+        console.log(total)
+        if(cancelOrder.payment_method=="Net Banking" || cancelOrder.payment_method=="Wallet"){
+            await User.findByIdAndUpdate(req.session.userId,{$inc:{wallet:total}})
+            console.log("Balance Added")
+        }
+        let cancelDetails = await Order.findByIdAndUpdate(id,{$set:{status:"Cancelled"}})
+        if(cancelDetails){
             console.log("Cancelled successfully")
         }
     res.redirect('/orders')
@@ -805,6 +878,7 @@ const orderPayment = async(req,res)=>{
         const orderDetails = await Cart.findOne({userid:req.session.userId}).lean()
         console.log(orderDetails.total)
         const userDetails  = await User.findOne({_id:req.session.userId}).lean()
+        const couponDetails = await Coupon.find({}).lean()
         // console.log(userDetails.address)
         let userAddress=userDetails.address.map(data=>{
             return({
@@ -814,7 +888,8 @@ const orderPayment = async(req,res)=>{
             })
         })
         console.log(JSON.stringify(userAddress))
-        res.render('user/confirm-order', { userDetails, userAddress: encodeURIComponent(JSON.stringify(userAddress)), orderDetails, totalPrice: orderDetails.total, username, session });
+        res.render('user/confirm-order', { coupons:encodeURIComponent(JSON.stringify(couponDetails)), couponDetails, userDetails, userAddress: encodeURIComponent(JSON.stringify(userAddress)), message:req.session.message , orderDetails, totalPrice: orderDetails.total, username, session });
+        req.session.message = ''
     } catch (error) {
         console.log(error.message)
     }
@@ -843,84 +918,84 @@ const addAddress = async(req,res)=>{
     }
 }
 
-const generateInvoice = (orderData) => {
-    // Define the invoice template using HTML/CSS
-    const invoiceTemplate = `
-    <html>
-    <head>
-      <style>
-        /* Define CSS styles for the invoice */
-        body {
-          font-family: Arial, sans-serif;
-          margin: 0;
-          padding: 20px;
-        }
+// const generateInvoice = (orderData) => {
+//     // Define the invoice template using HTML/CSS
+//     const invoiceTemplate = `
+//     <html>
+//     <head>
+//       <style>
+//         /* Define CSS styles for the invoice */
+//         body {
+//           font-family: Arial, sans-serif;
+//           margin: 0;
+//           padding: 20px;
+//         }
         
-        h1 {
-          text-align: center;
-        }
+//         h1 {
+//           text-align: center;
+//         }
         
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 20px;
-        }
+//         table {
+//           width: 100%;
+//           border-collapse: collapse;
+//           margin-top: 20px;
+//         }
         
-        th, td {
-          padding: 10px;
-          text-align: left;
-        }
+//         th, td {
+//           padding: 10px;
+//           text-align: left;
+//         }
         
-        th {
-          background-color: #f2f2f2;
-        }
+//         th {
+//           background-color: #f2f2f2;
+//         }
         
-        tr:nth-child(even) {
-          background-color: #f9f9f9;
-        }
+//         tr:nth-child(even) {
+//           background-color: #f9f9f9;
+//         }
         
-        .invoice-details {
-          margin-top: 40px;
-        }
+//         .invoice-details {
+//           margin-top: 40px;
+//         }
         
-      </style>
-    </head>
-    <body>
-      <h1><u>Invoice</u></h1>
+//       </style>
+//     </head>
+//     <body>
+//       <h1><u>Invoice</u></h1>
       
-      <div class="invoice-details">
-        <h2>Invoice Details</h2>
-        <p><strong>User:</strong> ${orderData.user}</p>
-        <p><strong>Email:</strong> ${orderData.email}</p>
-        <p><strong>Mobile:</strong> ${orderData.mobile}</p>
-        <p><strong>Address:</strong> ${orderData.address}</p>
-        <p><strong>Payment Method:</strong> ${orderData.payment_method}</p>
-        <p><strong>Total:</strong> ${orderData.total}</p>
-        <p><strong>Order Date:</strong> ${orderData.orderDate}</p>
-      </div>
-    </body>
-  </html>
-`;
+//       <div class="invoice-details">
+//         <h2>Invoice Details</h2>
+//         <p><strong>User:</strong> ${orderData.user}</p>
+//         <p><strong>Email:</strong> ${orderData.email}</p>
+//         <p><strong>Mobile:</strong> ${orderData.mobile}</p>
+//         <p><strong>Address:</strong> ${orderData.address}</p>
+//         <p><strong>Payment Method:</strong> ${orderData.payment_method}</p>
+//         <p><strong>Total:</strong> ${orderData.total}</p>
+//         <p><strong>Order Date:</strong> ${orderData.orderDate}</p>
+//       </div>
+//     </body>
+//   </html>
+// `;
 
-// Rest of the code for generating and saving the invoice..
-    const invoiceFileName = `invoice_${orderData._id}.pdf`; // Assuming the order ID is stored in _id field
-    // Generate the PDF invoice using html-pdf module
-    pdf.create(invoiceTemplate).toFile(`downloads/${invoiceFileName}`, (err, res) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log('Invoice generated successfully!');
-        // Move the generated invoice to the downloads folder
-        fs.rename(res.filename, `downloads/${invoiceFileName}`, (error) => {
-            if (error) {
-            console.log(error);
-            } else {
-            console.log('Invoice downloaded successfully!');
-            }
-        });
-      }
-    });
-};
+// // Rest of the code for generating and saving the invoice..
+//     const invoiceFileName = `invoice_${orderData._id}.pdf`; // Assuming the order ID is stored in _id field
+//     // Generate the PDF invoice using html-pdf module
+//     pdf.create(invoiceTemplate).toFile(`downloads/${invoiceFileName}`, (err, res) => {
+//       if (err) {
+//         console.log(err);
+//       } else {
+//         console.log('Invoice generated successfully!');
+//         // Move the generated invoice to the downloads folder
+//         fs.rename(res.filename, `downloads/${invoiceFileName}`, (error) => {
+//             if (error) {
+//             console.log(error);
+//             } else {
+//             console.log('Invoice downloaded successfully!');
+//             }
+//         });
+//       }
+//     });
+// };
 
 const confirmOrder = async(req,res)=>{
     try {
@@ -939,18 +1014,48 @@ const confirmOrder = async(req,res)=>{
             products:productDetails.products,
             orderDate:Date.now()
         })
-
-        let success=await orderData.save()
-
+        if(req.body.payment == "Wallet"){
+            let user = await User.findById(req.session.userId)
+            let walletAmount = user.wallet
+            console.log(walletAmount)
+            if(req.body.total>walletAmount){
+                console.log(req.body.total)
+                let balance = req.body.total-walletAmount
+                const amount = balance * 100;
+                const options = {
+                    amount: amount,
+                    currency: 'INR',
+                    receipt: config.PAY_MAIL,
+                };
+            
+                instance.orders.create(options, async (err, order) => {
+                    if (!err) {
+                    res.status(200).send({
+                        success: true,
+                        msg: 'Order Created',
+                        order_id: order.id,
+                        amount: amount,
+                        key_id: config.KEY_ID,
+                        name: req.body.name,
+                        email: req.body.email,
+                        mobile: req.body.phone,
+                    });
+                    } else {
+                    res.status(400).send({ success: false, msg: 'Something went wrong' });
+                    }
+                });
+            }else{
+                await User.findByIdAndUpdate(req.session.userId,{$inc:{wallet:-req.body.total}})
+                var success=await orderData.save()
+            }
+        }else{
+            var success=await orderData.save()
+        }
         if (success){
             await Cart.findOneAndDelete({userid:userId})
             console.log('cart also deleted')
+            res.redirect('/ordersuccess')
         }
-
-        // Generate and download the invoice
-        generateInvoice(orderData);
-
-        res.redirect('/ordersuccess')
     } catch (error) {
         console.log(error.message);
     }
@@ -986,7 +1091,7 @@ const createOrder = async (req, res) => {
       console.log(error.message);
     }
 };
-  
+
 const orderSuccess=(req,res)=>{
     try {
         res.render('user/order-success')
@@ -1014,6 +1119,10 @@ const paymentSuccess=async (req,res)=>{
             orderDate:Date.now()
         })
 
+        if(req.body.payment=='Wallet'){
+            await User.findByIdAndUpdate(req.session.userId,{$set:{wallet:0}})
+        }
+
         let Datasuccess=await orderData.save()
 
         if (Datasuccess){
@@ -1022,8 +1131,6 @@ const paymentSuccess=async (req,res)=>{
         }
 
         console.log(orderData.products)
-        // Generate and download the invoice
-        generateInvoice(orderData);
 
         res.redirect('/ordersuccess')
 
@@ -1034,6 +1141,7 @@ const paymentSuccess=async (req,res)=>{
 }
 
 module.exports={
+    mainLoad,
     homeLoad,
     sortProducts,
     categorywiseLoad,
@@ -1052,14 +1160,15 @@ module.exports={
     insertUser,
     verifyLogin,
     logout,
-    isLoggedIn,
-    isLoggedOut,
     verifyMail,
     singleProductLoad,
     userCart,
     addToCart,
     updateCart,
     deleteCart,
+    wishlistLoad,
+    addToWishlist,
+    removeWishlist,
     orderPayment,
     confirmOrder,
     createOrder,
@@ -1070,6 +1179,7 @@ module.exports={
     returnOrder,
     addAddress,
     profileView,
+    profileEditAddress,
     ProfileAddAddress,
     profileAddressDelete,
     profileEdit,

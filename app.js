@@ -54,6 +54,20 @@ Handlebars.registerHelper('eq', function (a, b) {
   return a === b;
 });
 
+Handlebars.registerHelper('formatDate',(date)=>{
+  var options = { day: 'numeric', month: 'long', year: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
+})
+
+
+// Assuming you have an instance of Handlebars called 'handlebars'
+Handlebars.registerHelper('formatDescription', function(description) {
+  // Convert newline and carriage return characters into line breaks
+  const formattedDescription = description.replace(/\r?\n/g, '<br>');
+  return new Handlebars.SafeString(formattedDescription);
+});
+
+
 app.use('/admin', adminRouter);
 app.use('/', usersRouter);
 

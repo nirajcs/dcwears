@@ -5,38 +5,11 @@ const UserList = require('../model/userModel')
 const Category =require('../model/categoryModel')
 const Order = require('../model/orderModel')
 const Banner =require('../model/bannerModel')
+const Coupon = require('../model/couponModel')
 const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const sharp = require('sharp')
 
-
-//LOGIN AUTHENTICATION
-//Middlewares are used between each server action to check
-//wheather the admin is logged in or not
-const isAdminLogIn=(req,res,next)=>{
-    try {
-        if(req.session.adminLoggedIn){
-            next()
-        }else{
-            res.redirect('/admin')
-        }
-    } catch (error) {
-        console.log(error.message)
-    }
-    
-}
-
-const isAdminLogout=(req,res,next)=>{
-    try {
-        if(req.session.adminLoggedIn){
-            res.redirect('/admin/adminhome')
-        }else{
-            next()
-        }
-    } catch (error) {
-        console.log(error.message);
-    }
-}
 
 //PAGE LOAD
 //loads admin login
@@ -62,7 +35,7 @@ const adminProductLoad=async(req,res)=>{
         //     })
         // })
         // console.log(allProducts)
-        res.render('admin/home',{productData:products})
+        res.render('admin/home',{productsActive:true,productData:products})
     } catch (error) {
         console.log(error.message);
     }
@@ -73,7 +46,7 @@ const usersListLoad=async(req,res)=>{
     try {
         const users=await UserList.find({}).lean()
         console.log(users)
-        res.render('admin/userlist',{users})
+        res.render('admin/userlist',{usersActive:true,users})
     } catch (error) {
         console.log(error.message)
     }
@@ -104,7 +77,7 @@ const dashboardLoad=async (req,res)=>{
             users:userCount,
             orders:orderCount
         }
-        res.render('admin/dashboard',{dashboardDetails,statusCount:JSON.stringify(statusCount)})
+        res.render('admin/dashboard',{homeActive:true,dashboardDetails,statusCount:JSON.stringify(statusCount)})
     } catch (error) {
         console.log(error.message)
     }
@@ -115,7 +88,7 @@ const dashboardLoad=async (req,res)=>{
 const addBanner=async(req,res)=>{
     try {
         let bannerData=await Banner.find({}).lean()
-        res.render('admin/banners',{bannerData})
+        res.render('admin/banners',{bannerActive:true,bannerData})
     } catch (error) {
         
     }
@@ -436,11 +409,12 @@ const editProduct = async (req, res) => {
     }
 };
   
+
 //Category Management
 const categoryLoad=async(req,res)=>{
     try {
         let categories=await Category.find({}).lean()
-        res.render('admin/categories',{categories,message:req.session.message})
+        res.render('admin/categories',{categoryActive:true,categories,message:req.session.message})
         req.session.message=''
     } catch (error) {
         console.log(error.message)
@@ -449,14 +423,17 @@ const categoryLoad=async(req,res)=>{
 
 const addCategory=async(req,res)=>{
     try {
-        let category=await Category.findOne({category:req.body.category})
-        if(category){
+        let {category,offer} = req.body
+        let capitalizedCategory = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+        let categoryCheck=await Category.findOne({category:capitalizedCategory})
+        if(categoryCheck){
             console.log("Category already added")
             req.session.message="Category Exists Already"
             res.redirect('/admin/category')
         }else{
             let categoryadd=new Category({
-                category:req.body.category
+                category:capitalizedCategory,
+                offer:offer
             })
             const addSuccess=await categoryadd.save()
             if(addSuccess){
@@ -467,6 +444,19 @@ const addCategory=async(req,res)=>{
                 res.redirect('/admin/category')
             }
         }
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+const editCategory=async(req,res)=>{
+    try {
+        let {id,category,offer} = req.body
+        let editCategory=await Category.findByIdAndUpdate(id,{$set:{category:category,offer:offer}})
+        if(editCategory){
+            console.log('Edited successfully')
+        }
+        res.redirect('/admin/category')
     } catch (error) {
         console.log(error.message)
     }
@@ -505,7 +495,7 @@ const loadOrders=async(req,res)=>{
             })
         // console.log(allOrders)
         // console.log(allOrders[0].products)
-        res.render('admin/orders',{allOrders})
+        res.render('admin/orders',{ordersActive:true,allOrders})
     } catch (error) {
         console.log(error.message)
     }
@@ -548,6 +538,7 @@ const updateStatus=async(req,res)=>{
         console.log(error.message)
     }
 }
+
 //return details of users
 const returnDetails=async(req,res)=>{
     try {
@@ -555,6 +546,23 @@ const returnDetails=async(req,res)=>{
         let returnDetails = await Order.find({'return.status':true}).lean()
         console.log(returnDetails)
         res.render('admin/returns',{returnDetails})
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+const pickupStatus = async(req,res)=>{
+    try {
+        let {orderid,status} = req.body
+        let statusChange = await Order.findByIdAndUpdate(orderid,{$set:{'return.pickup':status}})
+        if(statusChange){
+            console.log("Status Changed")
+        }
+        if(status=='true'){
+            await UserList.findByIdAndUpdate(statusChange.userid,{$inc:{wallet:statusChange.total}})
+            console.log("Wallet Updated")
+        }
+        res.redirect('/admin/return_details')
     } catch (error) {
         console.log(error.message)
     }
@@ -583,6 +591,62 @@ const returnInfo=async(req,res)=>{
     }
 }
 
+
+//Coupon Management
+const couponLoad = async(req,res)=>{
+    try {
+        let couponDetails = await Coupon.find({}).lean()
+        res.render('admin/coupon',{couponsActive:true,couponDetails})
+    } catch (error) {
+        console.eror(error.message)
+    }
+}
+
+const addCoupon = async(req,res)=>{
+    let {couponname,amount,description,minamount,date}=req.body
+    let newCoupon = new Coupon({
+        name:couponname,
+        discount:amount,
+        description:description,
+        applicable:minamount,
+        dateExpiry:date
+    })
+    let saveCoupon = await newCoupon.save()
+    if(saveCoupon){
+        console.log("Coupon saved successfully")
+    }
+    res.redirect('/admin/coupons')
+}
+
+const editCoupon = async(req,res)=>{
+    let {id,couponname,amount,description,minamount,date}=req.body
+    let editDetails = {
+        name:couponname,
+        discount:amount,
+        description:description,
+        applicable:minamount,
+        dateExpiry:date
+    }
+    let editCoupon = await Coupon.findByIdAndUpdate(id,{$set:editDetails})
+    if(editCoupon){
+        console.log("Coupon Updated")
+    }
+    res.redirect('/admin/coupons')
+}
+
+const deleteCoupon = async(req,res)=>{
+    try {
+        let id=req.query.id
+        let deleteCoupon = await Coupon.findByIdAndDelete(id)
+        if(deleteCoupon){
+            console.log("Deleted Successfully")
+        }
+        res.redirect('/admin/coupons')
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
 module.exports={
     adminLoginLoad,
     dashboardLoad,
@@ -599,13 +663,12 @@ module.exports={
     adminVerify,
     addProductLoad,
     insertProduct,
-    isAdminLogIn,
-    isAdminLogout,
     deleteProduct,
     editProductLoad,
     editProduct,
     categoryLoad,
     addCategory,
+    editCategory,
     deleteCategory,
     loadOrders,
     orderInfo,
@@ -614,6 +677,11 @@ module.exports={
     activateBanner,
     removeBanner,
     updateStatus,
+    pickupStatus,
     returnDetails,
-    returnInfo
+    returnInfo,
+    couponLoad,
+    addCoupon,
+    editCoupon,
+    deleteCoupon
 }
