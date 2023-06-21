@@ -104,7 +104,7 @@ const sendVerifyMail=(name,email,user_id)=>{
             from:'DC Wears',
             to:email,
             subject:'Verify Your Mail',
-            html:'<p>Hi '+name+',Please click here to <a href="http://localhost:3000/register/verify?id='+user_id+'">verify</a> your mail.</p>'
+            html:'<p>Hi '+name+',Please click here to <a href="http://localhost:4000/register/verify?id='+user_id+'">verify</a> your mail.</p>'
         }
         transporter.sendMail(mailOptions,(error,info)=>{
             if(error){
@@ -592,6 +592,7 @@ const userCart=async(req,res)=>{
     try {
         let username=req.session.username
         let session=req.session.loggedIn
+        let productDetails = await Product.find({}).lean()
         let cart= await Cart.findOne({userid:req.session.userId}).populate("products.productid")
         console.log(cart)
         if (cart) {
@@ -616,7 +617,8 @@ const userCart=async(req,res)=>{
                     if(products.length===0){
                         await Cart.findOneAndDelete({userid:req.session.userId})
                     }
-                res.render('user/user-cart',{title:"User Cart",totalPrice:total,cartData,username,session,cartActive:true})
+                    
+                res.render('user/user-cart',{totalPrice:total,productDetails: JSON.stringify(productDetails),cartData,username,session,cartActive:true})
             }
         }else{
             res.render('user/user-cart',{title:'User Cart',username,session,message:"CART IS EMPTY",cartActive:true})
@@ -675,6 +677,10 @@ const updateCart=async(req,res) => {
      console.log(updateValues)
      for(let data of updateValues){
          const { prod_id, quantity ,size ,finalAmount} = data;
+         let productDetails = await Product.findById(prod_id)
+         if(productDetails.stock < quantity){
+            res.send({noStock:true})
+         }
          const changeCart = await Cart.updateOne(
             {
               userid: userId,
@@ -796,7 +802,7 @@ const myOrders=async(req,res)=>{
         let session=req.session.loggedIn
         console.log("My orders")
         let orders=await Order.find({userid:req.session.userId}).populate('products.productid').sort({orderDate:-1})
-        console.log(orders)
+        // console.log(orders)
         if(orders){
             let orderDetails = orders.map(data=>{
                 return({
@@ -805,19 +811,20 @@ const myOrders=async(req,res)=>{
                     total:data.total,
                     products:data.products.map(details=>{
                         return({
+                            id:details._id,
                             image:details.productid.image[2],
                             name:details.productid.name,
                             price:details.productid.price,
                             quantity:details.quantity,
-                            size:details.size
+                            size:details.size,
+                            status:details.status,
+                            return:details.return.status,
                         })
                     }),
-                    status:data.status,
-                    return:data.return.status,
                     payment:data.payment_method
                 })
             })
-            console.log(orderDetails)
+            // console.log(orderDetails)
             res.render('user/orders',{orderProducts:encodeURIComponent(JSON.stringify(orderDetails)),orders:encodeURIComponent(JSON.stringify(orders)),username,session,orderDetails,returnErr:req.session.returnErr,orderActive:true})
             req.session.returnErr=""
         }else{
@@ -831,17 +838,28 @@ const myOrders=async(req,res)=>{
 
 const orderCancel=async(req,res)=>{
     try {
-        let id=req.params.id
-        let cancelOrder = await Order.findById(id)
-        console.log(cancelOrder)
+        let id=req.params.orderId
+        let prodId=req.params.prodId
+        let cancelOrder = await Order.findById(id).populate('products.productid')
         let total = cancelOrder.total
         console.log(total)
+        console.log(id)
+        let prodDetails = cancelOrder.products.find(item=>item._id==prodId)
+        let prodTotal = (prodDetails.quantity*prodDetails.offerPrice)
+        let newPrice = total-prodTotal
+        if(newPrice<0){
+            newPrice=0
+        }
+        console.log(newPrice)
+        console.log(prodDetails)
+        console.log(prodId)
         if(cancelOrder.payment_method=="Net Banking" || cancelOrder.payment_method=="Wallet"){
-            await User.findByIdAndUpdate(req.session.userId,{$inc:{wallet:total}})
+            await User.findByIdAndUpdate(req.session.userId,{$inc:{wallet:prodTotal}})
             console.log("Balance Added")
         }
-        let cancelDetails = await Order.findByIdAndUpdate(id,{$set:{status:"Cancelled"}})
+        let cancelDetails = await Order.findOneAndUpdate({_id:id,'products._id':prodId},{ $set: { 'products.$.status': "Cancelled" } })
         if(cancelDetails){
+            await Order.findByIdAndUpdate(id,{$set:{total:newPrice}})
             console.log("Cancelled successfully")
         }
     res.redirect('/orders')
@@ -851,9 +869,10 @@ const orderCancel=async(req,res)=>{
 }
 
 const returnOrder=async(req,res)=>{
-    let returnData=req.body
-    console.log(returnData)
-    let order=await Order.findById(returnData.orderid)
+    let orderId = req.body.orderid
+    let prodId = req.body.productid
+    let reason = req.body.reason
+    let order = await Order.findById(orderId)
     let currentDate=Date.now()
     let timeDiff=currentDate-order.orderDate
     let sevenDays= 7 * 24 * 60 * 60 * 1000; //Seven Days in milliseconds
@@ -861,13 +880,12 @@ const returnOrder=async(req,res)=>{
     console.log(timeDiff)
     console.log(withinSevenDays);
     if(withinSevenDays){
-        await Order.findByIdAndUpdate(returnData.orderid,{$set:{return:{status:true,reason:returnData.reason}}})
+        await Order.findOneAndUpdate({_id:orderId,'products._id':prodId},{$set:{ 'products.$.return':{status:true,reason:reason} }})
     }else{
         req.session.returnErr="You cannot return as the number of days exceeded"
     }
     res.redirect('/orders')
 }
-
 
 //ORDER PAYMENT
 //payment and confirmation
@@ -1046,12 +1064,28 @@ const confirmOrder = async(req,res)=>{
                 });
             }else{
                 await User.findByIdAndUpdate(req.session.userId,{$inc:{wallet:-req.body.total}})
+
                 var success=await orderData.save()
             }
         }else{
             var success=await orderData.save()
         }
         if (success){
+            let cart = await Cart.findOne({userid:userId})
+            // Update the stock count of products
+            cart.products.forEach(async (product) => {
+                const productId = product.productid;
+                const quantity = product.quantity;
+        
+                // Find the product by ID
+                const foundProduct = await Product.findById(productId);
+            
+                // Calculate the new stock count
+                const newStock = parseInt(foundProduct.stock) - parseInt(quantity);
+        
+                // Update the stock count in the database
+                await Product.findByIdAndUpdate(productId, { stock: newStock });
+            })
             await Cart.findOneAndDelete({userid:userId})
             console.log('cart also deleted')
             res.redirect('/ordersuccess')
@@ -1126,6 +1160,21 @@ const paymentSuccess=async (req,res)=>{
         let Datasuccess=await orderData.save()
 
         if (Datasuccess){
+            let cart = await Cart.findOne({userid:userId})
+            // Update the stock count of products
+            cart.products.forEach(async (product) => {
+                const productId = product.productid;
+                const quantity = product.quantity;
+        
+                // Find the product by ID
+                const foundProduct = await Product.findById(productId);
+            
+                // Calculate the new stock count
+                const newStock = parseInt(foundProduct.stock) - parseInt(quantity);
+        
+                // Update the stock count in the database
+                await Product.findByIdAndUpdate(productId, { stock: newStock });
+            })
             await Cart.findOneAndDelete({userid:userId})
             console.log('cart also deleted')
         }

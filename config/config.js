@@ -6,8 +6,6 @@ const KEY_SECRET = process.env.KEY_SECRET
 const PAY_MAIL = process.env.PAY_MAIL
 
 
-
-
 module.exports = {
     ADMIN_EMAIL,
     APP_PASSWORD,

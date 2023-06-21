@@ -17,10 +17,11 @@
       </div>
     </div>
   {{else}}
-<section class="h-100" style="background-color: #eee;">
+<section class="container h-100">
   <div class="container h-100 py-5">
     <div class="row d-flex justify-content-center align-items-center h-100">
-      
+      <input type="hidden" id="productDetails" value="{{productDetails}}">
+
         {{#each cartData}}
           <div class="cardDataClass card rounded-3 mb-2">
             <div hidden>
@@ -60,6 +61,7 @@
                 </div>
               </div>
             </div>
+            <p class="message text-center text-danger"></p>
           </div>
         {{/each}}
 
@@ -74,7 +76,7 @@
               </div>
             </div>
           </div>
-              <a href="/payment" class="btn btn-primary btn-lg btn-block w-100">Proceed to Pay</a>
+              <a href="/payment" id="proceed-btn" class="btn btn-primary btn-lg btn-block w-100 mb-5 text-white">Proceed to Pay</a>
         </div>
       </div>
     </div>
@@ -84,48 +86,63 @@
 
 {{!-- <script src="/scripts/user/user-cart.js"></script> --}}
 
+
 <script>
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const finalAmount = document.getElementById('finalAmount');
-    const cardDataArray = Array.from(document.getElementsByClassName('cardDataClass'));
+document.addEventListener('DOMContentLoaded', () => {
+  const finalAmount = document.getElementById('finalAmount');
+  const cardDataArray = Array.from(document.getElementsByClassName('cardDataClass'));
+  const productDetailsInput = document.getElementById('productDetails');
+  const productDetails = JSON.parse(productDetailsInput.value);
+  console.log(productDetails);
+  
+  cardDataArray.forEach(cardData => {
+    const quantityInput = cardData.querySelector('.quantityInput');
+    const originalPrice = cardData.querySelector('.originalPriceClass');
+    const totalPriceEl = cardData.querySelector('.totalPriceClass');
+    const messageField = cardData.querySelector('.message');
     
-
-    cardDataArray.map(cardData => {
-      const quantityInput = cardData.querySelector('.quantityInput');
-      const originalPrice = cardData.querySelector('.originalPriceClass');
-      const totalPriceEl = cardData.querySelector('.totalPriceClass');
+    quantityInput.addEventListener('change', () => {
+      let prodId = cardData.querySelector('.prod_id_class').innerText;
+      let check = productDetails.find(item => item._id == prodId);
       
-      quantityInput.addEventListener('change', () => {
-        const totalPrice = quantityInput.value * originalPrice.value;
-        totalPriceEl.innerText = totalPrice.toString();
-        totalPriceEl.dispatchEvent(new CustomEvent('change'));
-        updateCart();
-      })
-
-      totalPriceEl.addEventListener('change', () => {
-        const sum = cardDataArray.reduce((sum, cardData) => {
-          return sum + Number(cardData.querySelector('.totalPriceClass').innerText);
-        }, 0);
-        finalAmount.innerText = sum.toString();
-      });
-
+      if (check.stock < quantityInput.value) {
+        messageField.innerText = "Stock Unavailable";
+      } else {
+        messageField.innerText = "";
+      }
+      
+      const totalPrice = quantityInput.value * originalPrice.value;
+      totalPriceEl.innerText = totalPrice.toString();
       totalPriceEl.dispatchEvent(new CustomEvent('change'));
+      updateCart();
     });
+
+    totalPriceEl.addEventListener('change', () => {
+      const sum = cardDataArray.reduce((sum, cardData) => {
+        return sum + Number(cardData.querySelector('.totalPriceClass').innerText);
+      }, 0);
+      finalAmount.innerText = sum.toString();
+      updateProceedButton();
+    });
+
+    totalPriceEl.dispatchEvent(new CustomEvent('change'));
 
     async function updateCart() {
       const products = cardDataArray.map(cardData => {
         const prod_id = cardData.querySelector('.prod_id_class').innerText;
         const quantity = Number(cardData.querySelector('.quantity_class').value);
         const size = cardData.querySelector('.size_class').innerText;
-        return ({
+        return {
           prod_id,
           quantity,
           size,
-          finalAmount: Number(finalAmount.innerText)
-        })
-      })
+          finalAmount: Number(finalAmount.innerText),
+        };
+      });
+      
       const updatedCartData = { products };
+      
       try {
         const response = await fetch('/cart/checkout', {
           method: 'POST',
@@ -134,14 +151,30 @@
           },
           body: JSON.stringify(updatedCartData),
         });
-
+        
         const resBody = await response.json();
         console.info(resBody);
-      } catch(err) {
-        console.err(err);
+      } catch (err) {
+        console.error(err);
       }
+      
+      updateProceedButton();
     }
+  });
 
+  function updateProceedButton() {
+    const messageFields = Array.from(document.getElementsByClassName('message'));
+    const proceedBtn = document.getElementById('proceed-btn');
+    const hasUnavailableStock = messageFields.some(messageField => messageField.innerText === 'Stock Unavailable');
+
+    if (hasUnavailableStock) {
+      proceedBtn.removeAttribute('href');
+      proceedBtn.style.pointerEvents = 'none';
+    } else {
+      proceedBtn.setAttribute('href', '/payment');
+      proceedBtn.style.pointerEvents = 'auto';
+    }
+  }
 });
 
 </script>

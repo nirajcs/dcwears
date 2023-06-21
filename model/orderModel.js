@@ -32,16 +32,33 @@ const orderSchema = new mongoose.Schema({
             size:{
                 type:String,
                 required:true
+            },
+            offerPrice:{
+                type:Number
+            },
+            status:{
+                type:String,
+                default:"Pending"
+            },
+            return:{
+                status:{
+                    type:Boolean,
+                    default:false
+                },
+                reason:{
+                    type:String,
+                    required:false
+                },
+                pickup:{
+                    type:Boolean,
+                    default:false,
+                }
             }
         }
     ],
     total:{
         type:String,
         required:true
-    },
-    status:{
-        type:String,
-        default:"Pending"
     },
     address:{
         type:String,
@@ -54,20 +71,6 @@ const orderSchema = new mongoose.Schema({
     orderDate:{
         type:Date,
         required:true
-    },
-    return:{
-        status:{
-            type:Boolean,
-            default:false
-        },
-        reason:{
-            type:String,
-            required:false
-        },
-        pickup:{
-            type:Boolean,
-            default:false,
-        }
     }
 });
 

@@ -318,6 +318,7 @@ const insertProduct=async(req,res)=>{
         const product=new Product({
             name:req.body.name,
             price:req.body.price,
+            stock:req.body.stock,
             category:req.body.category,
             description:req.body.description,
             // image:req.files.map((file)=>file.filename)
@@ -385,6 +386,7 @@ const editProduct = async (req, res) => {
       let updateFields = {
         name: req.body.name,
         price: req.body.price,
+        stock: req.body.stock,
         category:req.body.category,
         description: req.body.description,
         image: existingProduct.image, // Preserve existing images
@@ -514,11 +516,11 @@ const orderInfo=async(req,res)=>{
                 name:data.productid.name,
                 quantity:data.quantity,
                 size:data.size,
-                price:data.productid.price
+                price:data.productid.price,
+                status:data.status
             })
         })
-        // console.log(orderDetails)
-        res.render('admin/orderInfo',{orderDetails})
+        res.render('admin/orderInfo',{orderDetails,orderid:orders._id})
     } catch (error) {
         console.log(error.message)
     }
@@ -527,13 +529,16 @@ const orderInfo=async(req,res)=>{
 const updateStatus=async(req,res)=>{
     try {
         let orderid = req.body.orderid
+        let prodId = req.body.productid
         let newstatus = req.body.status
-        console.log(orderid)
-        let status= await Order.findByIdAndUpdate(orderid,{$set:{status:newstatus}})
+        let status = await Order.findOneAndUpdate(
+            { _id: orderid, 'products.productid': prodId },
+            { $set: { 'products.$.status': newstatus } }
+        );
         if(status){
-            console.log("Status updated successfully")
+            console.log("Status Updated Successfully") 
         }
-        res.redirect('/admin/orders')
+        res.redirect('/admin/orderInfo/'+orderid)
     } catch (error) {
         console.log(error.message)
     }
@@ -542,8 +547,7 @@ const updateStatus=async(req,res)=>{
 //return details of users
 const returnDetails=async(req,res)=>{
     try {
-        console.log("here")
-        let returnDetails = await Order.find({'return.status':true}).lean()
+        let returnDetails = await Order.find({ 'products.return.status': true }).lean()
         console.log(returnDetails)
         res.render('admin/returns',{returnDetails})
     } catch (error) {
@@ -553,16 +557,23 @@ const returnDetails=async(req,res)=>{
 
 const pickupStatus = async(req,res)=>{
     try {
-        let {orderid,status} = req.body
-        let statusChange = await Order.findByIdAndUpdate(orderid,{$set:{'return.pickup':status}})
+        let {orderid,prodId,status} = req.body
+        let order = await Order.findById(orderid)
+        let product = order.products.find(item=>item._id==prodId)
+        product.return.pickup=status
+        if(status=='true'){
+            let returnAmount = Number(product.quantity)*Number(product.offerPrice)
+            console.log('Wallet Balance:',returnAmount)
+            await UserList.findByIdAndUpdate(order.userid,{$inc:{wallet:returnAmount}})
+            console.log("Wallet Updated")
+        }
+        let statusChange = await order.save()
+        console.log("STR")
+        console.log(statusChange)
         if(statusChange){
             console.log("Status Changed")
         }
-        if(status=='true'){
-            await UserList.findByIdAndUpdate(statusChange.userid,{$inc:{wallet:statusChange.total}})
-            console.log("Wallet Updated")
-        }
-        res.redirect('/admin/return_details')
+        res.redirect('/admin/returninfo/'+orderid)
     } catch (error) {
         console.log(error.message)
     }
@@ -573,19 +584,23 @@ const returnInfo=async(req,res)=>{
         let orderId=req.params.id
         console.log(orderId)
         let orders=await Order.findOne({_id:orderId}).populate('products.productid')
-
-        let orderDetails = orders.products.map(data=>{
+        // console.log(orders)
+        let filteredOrders = orders.products.filter(order=>order.return.status==true)
+        console.log(filteredOrders)
+        let orderDetails = filteredOrders.map(data=>{
             return({
+                arrayId:data._id,
                 id:data.productid._id,
                 image:data.productid.image[2],
                 name:data.productid.name,
                 quantity:data.quantity,
                 size:data.size,
-                price:data.productid.price
+                price:data.productid.price,
+                reason:data.return.reason,
+                pickup:data.return.pickup
             })
         })
-        console.log(orderDetails)
-        res.render('admin/return-info',{orderDetails})
+        res.render('admin/return-info',{orderDetails,orderId})
     } catch (error) {
         
     }

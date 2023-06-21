@@ -251,30 +251,30 @@
 </script>
 {{!-- COUPON MANAGEMENT --}}
 
-
 <script>
-
-    //console.log(('{{{userAddress}}}'))
-    //console.log(decodeURIComponent('{{{userAddress}}}'))
-
+    console.log('{{{userAddress}}}');
+    console.log(decodeURIComponent('{{{userAddress}}}'));
+  
     // Address Change Start
     const userAddress = JSON.parse(decodeURIComponent('{{{userAddress}}}'));
+    console.log(userAddress);
   
     const addressTypeSelect = document.getElementById('addressTypeSelect');
     const addressTextarea = document.getElementById('addressTextarea');
 
-    addressTypeSelect.addEventListener('change', function() {
+    addressTypeSelect.onchange = function() {
         const selectedAddressId = addressTypeSelect.value;
         
         // Find the address object with the matching ID
-        const selectedAddress = userAddress.find(address => address.id === selectedAddressId);
+        const selectedAddress = userAddress.find(address => address.id == selectedAddressId);
         
         // Update the textarea value with the selected address
         addressTextarea.value = selectedAddress ? selectedAddress.address : '';
-    });
+    };
     // Address Change End
+</script>
 
-
+<script>
 // RAZOR PAY
 $(document).ready(function(){
     $('.pay-form').submit(function(e){

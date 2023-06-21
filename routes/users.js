@@ -48,7 +48,7 @@ router.get('/productload',userController.singleProductLoad)
 
 //User Orders
 router.get('/orders',middlewareController.isLoggedOut,userController.myOrders)
-router.get('/cancelorder/:id',middlewareController.isLoggedOut,userController.orderCancel)
+router.get('/cancelorder/:orderId/:prodId',middlewareController.isLoggedOut,userController.orderCancel)
 router.post('/return-order',middlewareController.isLoggedOut,userController.returnOrder)
 
 //User Cart

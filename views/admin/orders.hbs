@@ -17,7 +17,6 @@
             <th scope="col">Address</th>
             <th scope="col">Amount</th>
             <th scope="col">Payment</th>
-            <th scope="col">Status</th>
             <th scope="col">Info</th>
         </tr>
     </thead>
@@ -31,34 +30,6 @@
                 <td scope="col">{{this.address}}</td>
                 <td scope="col">{{this.total}}</td>
                 <td scope="col">{{this.payment_method}}</td>
-                <td scope="col"><a class="text-success text-decoration-none orderStatus" id="orderStatus" style="cursor: pointer;" data-bs-orderid="{{this.id}}" data-bs-toggle="modal" data-bs-target="#statusChange">{{this.status}}</a></td>
-                    <!-- Modal -->
-                            <div class="modal fade" id="statusChange" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-                              <div class="modal-dialog modal-dialog-centered" role="document">
-                                <div class="modal-content">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLongTitle">Update Status</h5>
-                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <div class="modal-body">
-                                    <form action="/admin/statuschange" method="post">
-                                    <input type="text" name="orderid" id="orderDetails" hidden>
-                                    <select class="form-select" name="status" id="status">
-                                      <option value="Pending">Pending</option>
-                                      <option value="Delivered">Delivered</option>
-                                      <option value="Cancelled">Cancelled</option>
-                                    </select>
-                                  </div>
-                                  <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                    <button type="submit" class="btn btn-primary">Update Status</button>
-                                  </div>
-                                  </form>
-                                </div>
-                              </div>
-                            </div>
                 <td scope="col"><a href="/admin/orderInfo/{{this.id}}">More...</a></td>
             </tr>
         {{/each}}
@@ -84,22 +55,6 @@
     }
     });
   });
-
-
-// Get all the order buttons
-var orderStatus = document.querySelectorAll('.orderStatus');
-
-// Add a click event listener to each button
-orderStatus.forEach(function(status) {
-  status.addEventListener('click', function() {
-    // Get the order ID from the status's data attribute
-    var orderID = status.getAttribute('data-bs-orderid');
-    console.log(orderID);
-    // Access the order ID in the modal
-    var orderDetailsElement = document.getElementById('orderDetails');
-    orderDetailsElement.value = orderID;
-  });
-});
 
 
 </script>
