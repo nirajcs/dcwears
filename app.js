@@ -7,15 +7,15 @@ var Handlebars=require('handlebars')
 var hbs=require('express-handlebars')
 var session=require('express-session')
 var noCache = require('nocache')
-const connectMongoDBSession= require('connect-mongodb-session');
+// const connectMongoDBSession= require('connect-mongodb-session');
 
 
 
-const MongoDBStore = connectMongoDBSession(session);
-const mongoStore = new MongoDBStore({
-  uri: 'mongodb://0.0.0.0:27017/dcwears',
-  collection: 'sessions'
-});
+// const MongoDBStore = connectMongoDBSession(session);
+// const mongoStore = new MongoDBStore({
+//   uri: 'mongodb://0.0.0.0:27017/dcwears',
+//   collection: 'sessions'
+// });
 
 var adminRouter = require('./routes/admin');
 var usersRouter = require('./routes/users');
@@ -24,7 +24,7 @@ var app = express();
 
 //mongoose connection
 const mongoose=require('mongoose')
-mongoose.connect('mongodb://0.0.0.0:27017/dcwears')
+mongoose.connect('mongodb+srv://nirajcs2001:kNCtHDRcVfxAUCqi@cluster0.eumb15n.mongodb.net/?retryWrites=true&w=majority')
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -41,8 +41,7 @@ app.use(session({
   secret:"TheKey",
   saveUninitialized:false,
   resave:false,
-  cookie:{secure:false},
-  store: mongoStore,
+  cookie:{secure:false}
 }))
 
 Handlebars.registerHelper("inc", function(value, options)
