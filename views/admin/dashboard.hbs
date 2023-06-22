@@ -86,7 +86,7 @@
     console.log(statusCount)
 
     let pieData = {
-      labels: ['Delivered', 'Pending', 'Return'],
+      labels: ['Delivered', 'Pending', 'Cancel'],
       values: []
     };
 
@@ -95,10 +95,8 @@
         pieData.values[0] = status.count;
       } else if (status._id === 'Pending') {
         pieData.values[1] = status.count;
-      }
-
-      if (status._id === 'Delivered' && status.returnCount > 0) {
-        pieData.values[2] = status.returnCount;
+      }else if(status._id === 'Cancelled'){
+        pieData.values[2] = status.count;
       }
     });
 

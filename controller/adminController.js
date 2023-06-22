@@ -55,25 +55,30 @@ const usersListLoad=async(req,res)=>{
 //dash board load
 const dashboardLoad=async (req,res)=>{
     try {
-        let productCount = await Product.countDocuments({})
+        let productCount = await Product.aggregate([
+            {
+              $group: {
+                _id: null,
+                totalStock: { $sum: '$stock' }
+              }
+            }
+          ])
         let userCount = await UserList.countDocuments({})
         let orderCount = await Order.countDocuments({})
         let statusCount = await Order.aggregate([
             {
-                $group:{
-                    _id:'$status',
-                    count:{$sum:1},
-                    returnCount:{
-                        $sum:{
-                            $cond:[{$eq:['$return.status',true]},1,0]
-                        }
-                    }
-                }
+              $unwind: '$products'
+            },
+            {
+              $group: {
+                _id: '$products.status',
+                count: { $sum: 1 }
+              }
             }
-        ])
-        console.log(statusCount)
+          ])
+        console.log(productCount)
         let dashboardDetails = {
-            products:productCount,
+            products:productCount[0].totalStock,
             users:userCount,
             orders:orderCount
         }
