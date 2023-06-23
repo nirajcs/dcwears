@@ -104,7 +104,7 @@ const sendVerifyMail=(name,email,user_id)=>{
             from:'DC Wears',
             to:email,
             subject:'Verify Your Mail',
-            html:'<p>Hi '+name+',Please click here to <a href="http://localhost:4000/register/verify?id='+user_id+'">verify</a> your mail.</p>'
+            html:'<p>Hi '+name+',Please click here to <a href="http://dcwears.shop/register/verify?id='+user_id+'">verify</a> your mail.</p>'
         }
         transporter.sendMail(mailOptions,(error,info)=>{
             if(error){
@@ -342,7 +342,7 @@ const sendForgetVerifyMail=(email,user_id)=>{
             from:'DC Wears',
             to:email,
             subject:'Reset Your Password',
-            html:'<p>Hi,Please click here to <a href="http://localhost:3000/forget/verify?id='+user_id+'">Reset</a> your password.</p>'
+            html:'<p>Hi,Please click here to <a href="http://dcwears.shop/forget/verify?id='+user_id+'">Reset</a> your password.</p>'
     
         }
         transporter.sendMail(mailOptions,(error,info)=>{
